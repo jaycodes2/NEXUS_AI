@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getThreadId, newThread } from "../utils/thread";
 
-const API_URL = "http://localhost:5000/api/ai";
+const API_URL = (import.meta as any).env?.VITE_API_URL;
+
 
 export default function Sidebar() {
   const [threads, setThreads] = useState<any[]>([]);

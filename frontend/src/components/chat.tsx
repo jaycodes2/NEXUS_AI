@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { getThreadId } from "../utils/thread";
 
-const API_URL = "http://localhost:5000/api/ai";
+const API_URL = (import.meta as any).env?.VITE_API_URL;
 
 export default function Chat() {
   const threadId = getThreadId();
