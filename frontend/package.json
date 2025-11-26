@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tw": "tailwind -i ./src/index.css -o ./src/output.css --watch",
+    "tw": "./node_modules/.bin/tailwind -i ./src/index.css -o ./src/output.css --watch",
     "dev": "concurrently \"npm run tw\" \"vite\"",
-    "build": "tailwind -i ./src/index.css -o ./src/output.css && vite build",
+    "build": "./node_modules/.bin/tailwind -i ./src/index.css -o ./src/output.css && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -27,9 +27,5 @@
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^7.2.2"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }
