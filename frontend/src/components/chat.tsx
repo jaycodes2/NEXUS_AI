@@ -14,7 +14,7 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    fetch(`${API_URL}api/ai/history?threadId=${threadId}`, {
+    fetch(`${API_URL}/api/ai/history?threadId=${threadId}`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },
