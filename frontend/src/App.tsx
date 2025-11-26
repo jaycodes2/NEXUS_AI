@@ -25,14 +25,14 @@ function App() {
   if (appState === "loading") return <div />;
 
   return (
-    <Router>  {/* ← ONLY ONE ROUTER */}
+    <Router>
       <Routes>
-        {/* Welcome route */}
+        {/* Welcome Route */}
         {appState === "welcome" && (
           <Route path="/" element={<Welcome onStart={handleWelcomeComplete} />} />
         )}
 
-        {/* App routes */}
+        {/* App Routes */}
         {appState === "app" && (
           <>
             <Route path="/docs" element={<Documentation />} />
@@ -58,11 +58,28 @@ function App() {
                 )
               }
             />
-            <Route path="/system-logs" element={/* ... */} />
+            <Route
+              path="/system-logs"
+              element={
+                token ? (
+                  <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
+                    <Sidebar />
+                    <div className="flex-1 h-screen overflow-y-auto p-4">
+                      <div className="h-full w-full border border-[#2b2c2f] bg-[#111113] rounded-lg">
+                        <SystemLogs />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
             <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
           </>
         )}
 
+        {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
