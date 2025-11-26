@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    // Use modern modules since package.json says "type": "module"
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    // Target modern JS
+    "target": "ES2020",
+
+    // React JSX
+    "jsx": "react-jsx",
+
+    // DO NOT leave this true — it is why you're getting the error
+    "verbatimModuleSyntax": false,
+
+    // Allow default imports from CommonJS packages (like mongoose)
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // You already had these — keeping them
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true
+  },
+  "include": ["src"]
+}
