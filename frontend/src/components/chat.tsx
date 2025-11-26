@@ -28,7 +28,7 @@ export default function Chat() {
     if (!prompt.trim()) return;
     setLoading(true);
 
-    const res = await fetch(`${API_URL}/query`, {
+    const res = await fetch(`${API_URL}/api/ai/query`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

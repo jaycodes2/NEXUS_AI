@@ -16,7 +16,7 @@ export default function Sidebar() {
 
   async function loadThreads() {
     try {
-      const res = await fetch(`${API_URL}/threads`, {
+      const res = await fetch(`${API_URL}/api/ai/threads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -34,7 +34,7 @@ export default function Sidebar() {
     if (!window.confirm("Are you sure you want to delete this chat?")) return;
 
     try {
-      await fetch(`${API_URL}/threads/${threadId}`, {
+      await fetch(`${API_URL}/api/ai/threads/${threadId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
