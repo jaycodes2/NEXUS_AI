@@ -1,10 +1,10 @@
 import { geminiClient as ai } from "./aiClient.gemini.js";
 
-export async function generateTitleFromMessage(message) {
+export async function generateTitleFromMessage(message: string): Promise<string> {
   const prompt = `
   Generate a very short conversation title (3-6 words max) based on this message:
   "${message}"
-  
+
   Rules:
   - No punctuation
   - No quotes
@@ -12,7 +12,8 @@ export async function generateTitleFromMessage(message) {
   `;
 
   try {
-    return (await ai.chat(prompt)).trim();
+    const result = await ai.chat(prompt);
+    return result.trim();
   } catch {
     return message.slice(0, 20) || "New Chat";
   }
