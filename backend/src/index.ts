@@ -15,7 +15,6 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/system", systemRoutes);
 
