@@ -37,30 +37,37 @@ export default function Login({ onDone }: { onDone: () => void }) {
     setLoading(true);
 
     try {
-      const endpoint = mode === "login" ? "login" : "register";
-      const res = await fetch(`${API_URL}/api/auth/${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
+  const endpoint = mode === "login" ? "login" : "register";
+  const res = await fetch(`${API_URL}/api/auth/${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
 
-      const data = await res.json();
+  console.log('Response status:', res.status);
+  console.log('Response ok:', res.ok);
 
-      if (!res.ok) {
-        throw new Error(data.message || `HTTP error: ${res.status}`);
-      }
+  const data = await res.json();
+  console.log('Response data:', data); // ← Check what login actually returns
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        onDone();
-      } else {
-        throw new Error("No token received from server");
-      }
-    } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+  if (!res.ok) {
+    throw new Error(data.message || `HTTP error: ${res.status}`);
+  }
+
+  // DEBUG: Check what fields exist
+  console.log('Token exists:', !!data.token);
+  console.log('All data keys:', Object.keys(data));
+
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    onDone();
+  } else {
+    throw new Error("No token received from server");
+  }
+} catch (err: any) {
+  console.error('Full error:', err);
+  setError(err.message || "Something went wrong. Please try again.");
+}
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
