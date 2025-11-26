@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tw": "./node_modules/.bin/tailwindcss -i ./src/index.css -o ./src/output.css --watch",
-    "dev": "concurrently \"npm run tw\" \"vite\"",
-    "build": "./node_modules/.bin/tailwindcss -i ./src/index.css -o ./src/output.css && vite build",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview"
+}
+,
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
     "concurrently": "^8.2.2",
