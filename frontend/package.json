@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "tw": "tailwindcss -i ./src/index.css -o ./src/output.css --watch",
+    "tw": "tailwind -i ./src/index.css -o ./src/output.css --watch",
     "dev": "concurrently \"npm run tw\" \"vite\"",
-    "build": "tailwindcss -i ./src/index.css -o ./src/output.css && vite build",
+    "build": "tailwind -i ./src/index.css -o ./src/output.css && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
