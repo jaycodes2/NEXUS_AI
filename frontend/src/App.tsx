@@ -45,9 +45,9 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
 
         <Route
-          path="/login"
-          element={!token ? <Login onDone={() => window.location.reload()} /> : <Navigate to="/chat" replace />}
-        />
+  path="/login"
+  element={!token ? <Login onDone={() => window.location.href = "/chat"} /> : <Navigate to="/chat" replace />}
+/>
 
         <Route
           path="/chat"
