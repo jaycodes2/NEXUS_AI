@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, BarChart, Bar, Legend } from "recharts";
-
+const API_URL = import.meta.env.VITE_API_URL;
 type Log = {
   id: number;
   endpoint: string;
@@ -17,7 +17,7 @@ export default function SystemLogs() {
 
   useEffect(() => {
     const fetchLogs = () => {
-      fetch("http://localhost:5000/api/system/logs")
+      fetch(`${API_URL}/system/logs`)
         .then(res => res.json())
         .then(data => {
           setLogs(data);
