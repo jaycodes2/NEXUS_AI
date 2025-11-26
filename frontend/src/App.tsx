@@ -24,69 +24,45 @@ function App() {
 
   if (appState === "loading") return <div />;
 
-  if (appState === "welcome") {
-    return (
-      <Router>
-        <Routes>
-          <Route path="/" element={<Welcome onStart={handleWelcomeComplete} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    );
-  }
-
   return (
-    <Router>
+    <Router>  {/* ← ONLY ONE ROUTER */}
       <Routes>
-        {/* ✅ Documentation Route */}
-        <Route path="/docs" element={<Documentation />} />
+        {/* Welcome route */}
+        {appState === "welcome" && (
+          <Route path="/" element={<Welcome onStart={handleWelcomeComplete} />} />
+        )}
 
-        {/* ✅ Contact Page Route */}
-        <Route path="/contact" element={<ContactPage />} />
-
-        <Route
-  path="/login"
-  element={!token ? <Login onDone={() => window.location.href = "/chat"} /> : <Navigate to="/chat" replace />}
-/>
-
-        <Route
-          path="/chat"
-          element={
-            token ? (
-              <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
-                <Sidebar />
-                <div className="flex-1 h-screen overflow-y-auto p-0">
-                  <div className="h-full w-full border border-[#2b2c2f] bg-[#111113]">
-                    <Chat />
+        {/* App routes */}
+        {appState === "app" && (
+          <>
+            <Route path="/docs" element={<Documentation />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route
+              path="/login"
+              element={!token ? <Login onDone={() => window.location.href = "/"} /> : <Navigate to="/chat" replace />}
+            />
+            <Route
+              path="/chat"
+              element={
+                token ? (
+                  <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
+                    <Sidebar />
+                    <div className="flex-1 h-screen overflow-y-auto p-0">
+                      <div className="h-full w-full border border-[#2b2c2f] bg-[#111113]">
+                        <Chat />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
+            <Route path="/system-logs" element={/* ... */} />
+            <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
+          </>
+        )}
 
-        {/* ✅ SYSTEM LOGS ROUTE ADDED HERE */}
-        <Route
-          path="/system-logs"
-          element={
-            token ? (
-              <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
-                <Sidebar />
-                <div className="flex-1 h-screen overflow-y-auto p-4">
-                  <div className="h-full w-full border border-[#2b2c2f] bg-[#111113] rounded-lg">
-                    <SystemLogs />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-
-        <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
