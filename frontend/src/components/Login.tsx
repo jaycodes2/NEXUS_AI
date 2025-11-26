@@ -38,7 +38,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
 
     try {
       const endpoint = mode === "login" ? "login" : "register";
-      const res = await fetch(`${API_URL}/auth/${endpoint}`, {
+      const res = await fetch(`${API_URL}/api/auth/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
