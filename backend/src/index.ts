@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import aiRoutes from "./routes/aiRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
-import systemRoutes from "./routes/systemRoutes.js";
 
 dotenv.config();
 
@@ -16,7 +15,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/contact", contactRoutes);
-app.use("/api/system", systemRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "";
