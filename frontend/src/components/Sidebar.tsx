@@ -4,7 +4,6 @@ import { getThreadId, newThread } from "../utils/thread";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
-
 export default function Sidebar() {
   const [threads, setThreads] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
@@ -52,18 +51,18 @@ export default function Sidebar() {
 
   function handleNewChat() {
     newThread();
-    window.location.reload();
+    navigate("/chat"); // ← FIXED: Use navigate instead of reload
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
-    window.location.reload();
+    navigate("/chat"); // ← FIXED: Use navigate instead of reload
   }
 
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("threadId");
-    window.location.href = "/";
+    navigate("/"); // ← FIXED: Use navigate instead of href
   }
 
   useEffect(() => {
@@ -139,7 +138,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-gray-700/30 space-y-2">
 
-        {/* ✅ FIXED SYSTEM MONITOR BUTTON */}
+        {/* System Monitor Button */}
         <button
           onClick={() => navigate("/system-logs")}
           className="flex items-center w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
