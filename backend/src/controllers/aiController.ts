@@ -3,8 +3,7 @@ import { History } from "../models/historyModels.js";
 import { Thread } from "../models/threadModel.js";
 import { geminiClient as ai } from "../utils/aiClient.gemini.js";
 import { AuthedRequest } from "../middleware/auth.js";
-import { mysqlPool } from "../config/mysql.js";
-
+import { ApiLog } from "../models/ApiLog.js"; // ← New MongoDB model
 export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
   try {
     const { prompt, threadId } = req.body;
@@ -14,14 +13,12 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
       return res.status(400).json({ error: "prompt and threadId are required" });
     }
     // ✅ Log request to MySQL (Backend Metrics)
-await mysqlPool.execute(
-  "INSERT INTO api_logs (endpoint, method, input_size) VALUES (?, ?, ?)",
-  [
-    "/api/ai/query",
-    req.method,
-    prompt.length
-  ]
-);
+    await ApiLog.create({
+                endpoint: "/api/ai/query",
+                method: req.method,
+                input_size: prompt.length,
+                userId
+            });
 
 
     // ✅ Ensure thread exists
