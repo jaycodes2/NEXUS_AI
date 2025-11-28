@@ -1,23 +1,12 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
-import Login from "./components/Login";
+import Login from "./components/Login"; // This is the updated Login component
 import Welcome from "./components/Welcome";
 import Documentation from "./pages/Documentation"; 
 import ContactPage from "./pages/Contact";
 import SystemLogs from "./components/SystemLogs";
-
-// Login wrapper component with navigation
-function LoginWithNavigation() {
-  const navigate = useNavigate();
-  
-  const handleLoginSuccess = () => {
-    navigate("/chat");
-  };
-  
-  return <Login onDone={handleLoginSuccess} />;
-}
 
 function App() {
   const [appState, setAppState] = useState("loading");
@@ -50,7 +39,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/login"
-              element={!token ? <LoginWithNavigation /> : <Navigate to="/chat" replace />}
+              element={!token ? <Login /> : <Navigate to="/chat" replace />} {/* Use Login directly */}
             />
             <Route
               path="/chat"
