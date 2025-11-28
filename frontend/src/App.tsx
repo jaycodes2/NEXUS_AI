@@ -10,7 +10,7 @@ import SystemLogs from "./components/SystemLogs";
 
 function App() {
   const [appState, setAppState] = useState("loading");
-  const token = localStorage.getItem("token");
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
@@ -27,20 +27,22 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Welcome Route */}
+
         {appState === "welcome" && (
           <Route path="/" element={<Welcome onStart={handleWelcomeComplete} />} />
         )}
 
-        {/* App Routes */}
         {appState === "app" && (
           <>
             <Route path="/docs" element={<Documentation />} />
             <Route path="/contact" element={<ContactPage />} />
+
+            {/* LOGIN FIX — Pass updateToken */}
             <Route
               path="/login"
-              element={!token ? <Login /> : <Navigate to="/chat" replace />}
+              element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
             />
+
             <Route
               path="/chat"
               element={
@@ -58,6 +60,7 @@ function App() {
                 )
               }
             />
+
             <Route
               path="/system-logs"
               element={
@@ -75,11 +78,11 @@ function App() {
                 )
               }
             />
+
             <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
           </>
         )}
 
-        {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
