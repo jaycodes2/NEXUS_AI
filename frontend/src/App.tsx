@@ -35,7 +35,7 @@ function App() {
         {/* App Routes */}
         {appState === "app" && (
           <>
-            <Route path="/docs" element={<Documentation />} />
+            <Route path="/docs" element={<Documentation onBack={() => window.history.back()} />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/login"
