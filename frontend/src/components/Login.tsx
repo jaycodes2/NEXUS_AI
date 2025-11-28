@@ -56,13 +56,6 @@ export default function Login() {
         throw new Error(data.message || `HTTP error: ${res.status}`);
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        console.log('Login successful, navigating to /chat');
-        navigate("/chat"); // Direct navigation
-      } else {
-        throw new Error("No token received from server");
-      }
     } catch (err: any) {
       console.error('Full error:', err);
       setError(err.message || "Something went wrong. Please try again.");
