@@ -9,14 +9,11 @@ export default function Sidebar() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  const activeThread = getThreadId();
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  const token = localStorage.getItem("token");
-  const activeThread = getThreadId();
-
   async function loadThreads() {
-    if (!token) return;
-
     try {
       const res = await fetch(`${API_URL}/api/ai/threads`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -30,7 +27,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     loadThreads();
-  }, [token]);
+  }, []);
 
   async function deleteThread(threadId: string) {
     if (!window.confirm("Are you sure you want to delete this chat?")) return;
@@ -62,10 +59,13 @@ export default function Sidebar() {
     navigate("/chat");
   }
 
+  // FIXED LOGOUT — NO MORE GLITCH
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("threadId");
-    navigate("/", { replace: true });
+
+    // Hard redirect to kill all React state and avoid glitch
+    window.location.href = "/login";
   }
 
   useEffect(() => {
@@ -77,13 +77,6 @@ export default function Sidebar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  // 🔥 FIX: when token becomes null → instantly redirect to login
-  useEffect(() => {
-    if (!token) {
-      navigate("/", { replace: true });
-    }
-  }, [token]);
 
   return (
     <div className="w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 flex flex-col h-full">
@@ -165,7 +158,6 @@ export default function Sidebar() {
           Logout
         </button>
       </div>
-
     </div>
   );
 }

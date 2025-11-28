@@ -4,12 +4,14 @@ import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
 import Login from "./components/Login";
 import Welcome from "./components/Welcome";
-import Documentation from "./pages/Documentation"; 
+import Documentation from "./pages/Documentation";
 import ContactPage from "./pages/Contact";
 import SystemLogs from "./components/SystemLogs";
 
 function App() {
   const [appState, setAppState] = useState("loading");
+
+  // FIX: token MUST be in React state so logout re-renders routes
   const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(() => {
@@ -37,7 +39,7 @@ function App() {
             <Route path="/docs" element={<Documentation />} />
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* LOGIN FIX — Pass updateToken */}
+            {/* FIX: Pass setToken to Login so App updates when login happens */}
             <Route
               path="/login"
               element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
