@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
-import Login from "./components/Login"; // This is the updated Login component
+import Login from "./components/Login";
 import Welcome from "./components/Welcome";
 import Documentation from "./pages/Documentation"; 
 import ContactPage from "./pages/Contact";
@@ -39,7 +39,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/login"
-              element={!token ? <Login /> : <Navigate to="/chat" replace />} {/* Use Login directly */}
+              element={!token ? <Login /> : <Navigate to="/chat" replace />}
             />
             <Route
               path="/chat"
