@@ -11,12 +11,22 @@ import SystemLogs from "./components/SystemLogs";
 function App() {
   const [appState, setAppState] = useState("loading");
 
-  // FIX: token MUST be in React state so logout re-renders routes
+  // token MUST be reactive
   const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
     setAppState(hasSeenWelcome ? "app" : "welcome");
+  }, []);
+
+  // 🔥 FIX: Update token whenever logout happens (storage event)
+  useEffect(() => {
+    function handleStorage() {
+      setToken(localStorage.getItem("token"));
+    }
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   const handleWelcomeComplete = () => {
@@ -39,7 +49,7 @@ function App() {
             <Route path="/docs" element={<Documentation />} />
             <Route path="/contact" element={<ContactPage />} />
 
-            {/* FIX: Pass setToken to Login so App updates when login happens */}
+            {/* Login receives updateToken */}
             <Route
               path="/login"
               element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
@@ -81,6 +91,7 @@ function App() {
               }
             />
 
+            {/* Default redirect */}
             <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
           </>
         )}
