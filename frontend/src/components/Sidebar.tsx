@@ -62,7 +62,7 @@ export default function Sidebar() {
   // 🚀 FINAL FIX — logout fully clears app & redirects to login reliably
   function logout() {
     localStorage.clear();
-    window.location.href = "/#/login";  // HashRouter-safe redirect
+    window.location.href = "/";  // HashRouter-safe redirect
   }
 
   useEffect(() => {
