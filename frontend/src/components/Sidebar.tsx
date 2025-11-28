@@ -59,13 +59,10 @@ export default function Sidebar() {
     navigate("/chat");
   }
 
-  // FIXED LOGOUT — NO MORE GLITCH
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("threadId");
-
-    // Hard redirect to kill all React state and avoid glitch
-    window.location.href = "/#/login";
+    navigate("/login", { replace: true });
   }
 
   useEffect(() => {
@@ -158,6 +155,7 @@ export default function Sidebar() {
           Logout
         </button>
       </div>
+
     </div>
   );
 }
