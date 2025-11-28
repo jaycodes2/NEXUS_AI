@@ -9,11 +9,14 @@ export default function Sidebar() {
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const activeThread = getThreadId();
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
+  const token = localStorage.getItem("token");
+  const activeThread = getThreadId();
+
   async function loadThreads() {
+    if (!token) return;
+
     try {
       const res = await fetch(`${API_URL}/api/ai/threads`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -27,7 +30,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     loadThreads();
-  }, []);
+  }, [token]);
 
   async function deleteThread(threadId: string) {
     if (!window.confirm("Are you sure you want to delete this chat?")) return;
@@ -51,18 +54,18 @@ export default function Sidebar() {
 
   function handleNewChat() {
     newThread();
-    navigate("/chat"); // ← FIXED: Use navigate instead of reload
+    navigate("/chat");
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
-    navigate("/chat"); // ← FIXED: Use navigate instead of reload
+    navigate("/chat");
   }
 
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("threadId");
-    navigate("/"); // ← FIXED: Use navigate instead of href
+    navigate("/", { replace: true });
   }
 
   useEffect(() => {
@@ -75,10 +78,16 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // 🔥 FIX: when token becomes null → instantly redirect to login
+  useEffect(() => {
+    if (!token) {
+      navigate("/", { replace: true });
+    }
+  }, [token]);
+
   return (
     <div className="w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 flex flex-col h-full">
 
-      {/* Header */}
       <div className="p-6 border-b border-gray-700/30">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-8 h-8 bg-white/10 rounded-lg border border-white/10 flex items-center justify-center">
@@ -100,7 +109,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Threads */}
       <div className="flex-1 overflow-y-auto p-4 space-y-1" ref={menuRef}>
         {threads.map((t) => (
           <div
@@ -135,10 +143,7 @@ export default function Sidebar() {
         ))}
       </div>
 
-      {/* Footer */}
       <div className="p-4 border-t border-gray-700/30 space-y-2">
-
-        {/* System Monitor Button */}
         <button
           onClick={() => navigate("/system-logs")}
           className="flex items-center w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
