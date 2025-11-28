@@ -65,7 +65,7 @@ export default function Sidebar() {
     localStorage.removeItem("threadId");
 
     // Hard redirect to kill all React state and avoid glitch
-    window.location.href = "/login";
+    window.location.href = "/#/login";
   }
 
   useEffect(() => {
