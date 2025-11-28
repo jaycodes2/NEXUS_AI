@@ -59,10 +59,10 @@ export default function Sidebar() {
     navigate("/chat");
   }
 
+  // 🚀 FINAL FIX — logout fully clears app & redirects to login reliably
   function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("threadId");
-    navigate("/login", { replace: true });
+    localStorage.clear();
+    window.location.href = "/#/login";  // HashRouter-safe redirect
   }
 
   useEffect(() => {
