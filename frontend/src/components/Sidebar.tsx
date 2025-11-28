@@ -50,19 +50,27 @@ export default function Sidebar() {
   }
 
   function handleNewChat() {
-    newThread();
+    const id = newThread();
+    localStorage.setItem("threadId", id);
+
+    // Notify Chat component to reload thread
+    window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
+
+    // ❗ IMPORTANT: notify Chat to update threadId state
+    window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
   }
 
-  // 🚀 FINAL FIX — logout fully clears app & redirects to login reliably
   function logout() {
     localStorage.clear();
-    window.location.href = "/";  // HashRouter-safe redirect
+    window.location.href = "/"; // HashRouter friendly
   }
 
   useEffect(() => {
