@@ -142,13 +142,6 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-gray-700/30 space-y-2">
-        <button
-          onClick={() => navigate("/system-logs")}
-          className="flex items-center w-full px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
-        >
-          System Monitor
-        </button>
-
         <Link
           to="/contact"
           className="flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
