@@ -4,7 +4,8 @@ import { getThreadId } from "../utils/thread";
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
 export default function Chat() {
-  const threadId = getThreadId();
+  // ❗ threadId MUST be in state so it updates when switching threads or reloading
+  const [threadId, setThreadId] = useState(getThreadId());
   const token = localStorage.getItem("token");
 
   const [prompt, setPrompt] = useState("");
@@ -13,7 +14,23 @@ export default function Chat() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  // 🔥 Listen for threadId changes from Sidebar
   useEffect(() => {
+    function updateThreadId() {
+      const newId = localStorage.getItem("threadId");
+      if (newId && newId !== threadId) {
+        setThreadId(newId);
+      }
+    }
+
+    window.addEventListener("storage", updateThreadId);
+    return () => window.removeEventListener("storage", updateThreadId);
+  }, [threadId]);
+
+  // 🔥 Load history whenever threadId changes
+  useEffect(() => {
+    if (!threadId) return;
+
     fetch(`${API_URL}/api/ai/history?threadId=${threadId}`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
@@ -67,7 +84,7 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Messages Container - Scrollbar hidden */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4 sm:px-6 py-6 space-y-6">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center">
@@ -88,7 +105,7 @@ export default function Chat() {
         ) : (
           messages.map((m, i) => (
             <div key={i} className="space-y-6">
-              {/* User Message */}
+              {/* User */}
               <div className="flex justify-end">
                 <div className="flex items-start space-x-3 max-w-[80%]">
                   <div className="flex-1"></div>
@@ -101,7 +118,7 @@ export default function Chat() {
                 </div>
               </div>
 
-              {/* AI Message */}
+              {/* AI */}
               <div className="flex justify-start">
                 <div className="flex items-start space-x-3 max-w-[80%]">
                   <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -120,7 +137,7 @@ export default function Chat() {
           ))
         )}
 
-        {/* Loading Indicator */}
+        {/* Loading */}
         {loading && (
           <div className="flex justify-start">
             <div className="flex items-start space-x-3 max-w-[80%]">
@@ -141,7 +158,7 @@ export default function Chat() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Input */}
       <div className="bg-white dark:bg-gray-900 px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-end space-x-4">
@@ -167,8 +184,7 @@ export default function Chat() {
               </svg>
             </button>
           </div>
-          
-          {/* Quick Suggestions */}
+
           <div className="flex flex-wrap gap-2 mt-4 justify-center">
             {['How does this work?', 'Show me examples', 'Explain AI features', 'Help with setup'].map((suggestion) => (
               <button
