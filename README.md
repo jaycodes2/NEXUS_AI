@@ -253,7 +253,7 @@ graph LR
 ![Welcome Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Welcome_page.png?raw=true)
 
 ### Login / Signup Page
-![Login / Signup Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Welcome_page.png?raw=true)
+![Login / Signup Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Login&signup.png?raw=true)
 
 
 
