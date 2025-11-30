@@ -53,20 +53,24 @@ export default function Sidebar() {
     const id = newThread();
     localStorage.setItem("threadId", id);
 
+    // Notify Chat component to reload thread
     window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
 
+    // ❗ IMPORTANT: notify Chat to update threadId state
     window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
   }
 
   function logout() {
     localStorage.clear();
-    window.location.href = "/";
+    window.location.href = "/"; // HashRouter friendly
   }
 
   useEffect(() => {
@@ -80,7 +84,7 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <div className="hidden md:flex w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 flex-col h-full">
+    <div className="w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 flex flex-col h-full">
 
       <div className="p-6 border-b border-gray-700/30">
         <div className="flex items-center space-x-3 mb-6">
