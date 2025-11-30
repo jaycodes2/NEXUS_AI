@@ -4,14 +4,10 @@ import { getThreadId, newThread } from "../utils/thread";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
-interface SidebarProps {
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
-}
-
-export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) {
+export default function Sidebar() {
   const [threads, setThreads] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,20 +56,14 @@ export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) 
     localStorage.setItem("threadId", id);
     window.dispatchEvent(new Event("storage"));
     navigate("/chat");
-    // Close sidebar on mobile after new chat
-    if (window.innerWidth < 1024) {
-      onToggleSidebar();
-    }
+    setSidebarOpen(false); // Close sidebar on mobile after new chat
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
     window.dispatchEvent(new Event("storage"));
     navigate("/chat");
-    // Close sidebar on mobile after switching
-    if (window.innerWidth < 1024) {
-      onToggleSidebar();
-    }
+    setSidebarOpen(false); // Close sidebar on mobile after switching
   }
 
   function logout() {
@@ -87,20 +77,19 @@ export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) 
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(null);
       }
-      // Close sidebar on mobile when clicking outside
-      if (window.innerWidth < 1024 && sidebarRef.current && !sidebarRef.current.contains(e.target as Node) && sidebarOpen) {
-        onToggleSidebar();
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setSidebarOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [sidebarOpen, onToggleSidebar]);
+  }, []);
 
   return (
     <>
-      {/* Hamburger Button for Mobile */}
+      {/* Hamburger Button */}
       <button
-        onClick={onToggleSidebar}
+        onClick={() => setSidebarOpen(!sidebarOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 text-white hover:bg-gray-700/80 transition"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +102,7 @@ export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) 
         </svg>
       </button>
 
-      {/* Overlay for Mobile */}
+      {/* Overlay */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 bg-black/50 z-30 backdrop-blur-sm" />
       )}
@@ -128,18 +117,6 @@ export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) 
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        {/* Close button inside sidebar for mobile */}
-        <div className="lg:hidden absolute top-4 right-4">
-          <button
-            onClick={onToggleSidebar}
-            className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
         {/* Header */}
         <div className="p-6 border-b border-gray-700/30">
           <div className="flex items-center space-x-3 mb-6">
@@ -201,11 +178,7 @@ export default function Sidebar({ sidebarOpen, onToggleSidebar }: SidebarProps) 
         <div className="p-4 border-t border-gray-700/30 space-y-2">
           <Link
             to="/contact"
-            onClick={() => {
-              if (window.innerWidth < 1024) {
-                onToggleSidebar();
-              }
-            }}
+            onClick={() => setSidebarOpen(false)}
             className="flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
           >
             Contact

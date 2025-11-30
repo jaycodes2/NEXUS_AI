@@ -3,12 +3,7 @@ import { getThreadId } from "../utils/thread";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
-interface ChatProps {
-  sidebarOpen: boolean;
-  onToggleSidebar: () => void;
-}
-
-export default function Chat({ sidebarOpen, onToggleSidebar }: ChatProps) {
+export default function Chat() {
   // ❗ threadId MUST be in state so it updates when switching threads or reloading
   const [threadId, setThreadId] = useState(getThreadId());
   const token = localStorage.getItem("token");
@@ -18,7 +13,6 @@ export default function Chat({ sidebarOpen, onToggleSidebar }: ChatProps) {
   const [loading, setLoading] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // 🔥 Listen for threadId changes from Sidebar
   useEffect(() => {
@@ -46,14 +40,6 @@ export default function Chat({ sidebarOpen, onToggleSidebar }: ChatProps) {
       .then(data => setMessages(data))
       .catch(() => {});
   }, [threadId, token]);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
-    }
-  }, [prompt]);
 
   async function sendPrompt() {
     if (!prompt.trim()) return;
@@ -91,27 +77,9 @@ export default function Chat({ sidebarOpen, onToggleSidebar }: ChatProps) {
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Sidebar Toggle Button - Visible on desktop */}
-            <button
-              onClick={onToggleSidebar}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition"
-              title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h1>
-            </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h1>
           </div>
         </div>
       </div>
@@ -196,14 +164,13 @@ export default function Chat({ sidebarOpen, onToggleSidebar }: ChatProps) {
           <div className="flex items-end space-x-4">
             <div className="flex-1 relative">
               <textarea
-                ref={textareaRef}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Message AI Assistant..."
                 className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none pr-12 transition-all duration-200"
                 rows={1}
-                style={{ minHeight: '52px' }}
+                style={{ minHeight: '69px', maxHeight: '120px' }}
               />
             </div>
             <button
