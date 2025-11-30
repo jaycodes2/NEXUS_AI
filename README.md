@@ -16,7 +16,11 @@
 
 Yourseas AI is a production-ready full-stack conversational AI application that delivers a seamless chat experience. Built with cutting-edge technologies, it features intelligent conversation threading, secure authentication, and a beautiful responsive interface.
 
-![App Preview](https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=Yourseas+AI+Chat+Interface)
+<video width="1000" controls>
+  <source src="https://github.com/jaycodes2/NEXUS_AI/raw/refs/heads/main/Complete%20working.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 
 ## ✨ Features
 
