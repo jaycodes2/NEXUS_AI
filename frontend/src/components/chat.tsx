@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import Sidebar from "./Sidebar"; // 🔥 added
 import { getThreadId } from "../utils/thread";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
 export default function Chat() {
+  // ❗ threadId MUST be in state so it updates when switching threads or reloading
   const [threadId, setThreadId] = useState(getThreadId());
   const token = localStorage.getItem("token");
 
@@ -14,9 +14,7 @@ export default function Chat() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // 🔥 MOBILE SIDEBAR STATE
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
+  // 🔥 Listen for threadId changes from Sidebar
   useEffect(() => {
     function updateThreadId() {
       const newId = localStorage.getItem("threadId");
@@ -29,6 +27,7 @@ export default function Chat() {
     return () => window.removeEventListener("storage", updateThreadId);
   }, [threadId]);
 
+  // 🔥 Load history whenever threadId changes
   useEffect(() => {
     if (!threadId) return;
 
@@ -73,30 +72,8 @@ export default function Chat() {
   }, [messages]);
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-900 relative">
-
-      {/* 🔥 MOBILE SIDEBAR OVERLAY/SLIDE */}
-      {mobileSidebarOpen && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
-
-          <div className="fixed top-0 left-0 h-full w-64 bg-gray-900 z-50 md:hidden animate-slideIn">
-            <Sidebar />
-          </div>
-        </>
-      )}
-
-      {/* 🔥 FLOATING OPEN BUTTON */}
-      <button
-        onClick={() => setMobileSidebarOpen(true)}
-        className="fixed bottom-4 left-4 z-40 md:hidden px-4 py-2 bg-blue-600 text-white rounded-full shadow-lg"
-      >
-        Menu
-      </button>
-
+    <div className="h-full flex flex-col bg-white dark:bg-gray-900">
+      
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4 bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between">
