@@ -7,9 +7,7 @@ const API_URL = (import.meta as any).env?.VITE_API_URL;
 export default function Sidebar() {
   const [threads, setThreads] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const activeThread = getThreadId();
   const token = localStorage.getItem("token");
@@ -54,145 +52,107 @@ export default function Sidebar() {
   function handleNewChat() {
     const id = newThread();
     localStorage.setItem("threadId", id);
+
+    // Notify Chat component to reload thread
     window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
-    setSidebarOpen(false);
   }
 
   function switchThread(threadId: string) {
     localStorage.setItem("threadId", threadId);
+
+    // ❗ IMPORTANT: notify Chat to update threadId state
     window.dispatchEvent(new Event("storage"));
+
     navigate("/chat");
-    setSidebarOpen(false);
   }
 
   function logout() {
     localStorage.clear();
-    window.location.href = "/";
+    window.location.href = "/"; // HashRouter friendly
   }
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(null);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   return (
-    <>
-      {/* Mobile Hamburger Button */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-md border border-gray-600"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d={sidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-          />
-        </svg>
-      </button>
+    <div className="w-64 bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 flex flex-col h-full">
 
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        className={`
-          fixed top-0 left-0 h-full w-64 bg-gray-900 border-r border-gray-700 
-          z-50 transition-transform duration-300 ease-in-out
-          flex flex-col
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static
-        `}
-      >
-        {/* Header */}
-        <div className="p-6 border-b border-gray-700">
-          <div className="mb-6">
+      <div className="p-6 border-b border-gray-700/30">
+        <div className="flex items-center space-x-3 mb-6">
+          
+          <div>
             <h1 className="text-lg font-semibold text-white">Chat</h1>
             <p className="text-xs text-gray-400">Conversations</p>
           </div>
-
-          <button
-            onClick={handleNewChat}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            + New Chat
-          </button>
         </div>
 
-        {/* Threads List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2" ref={menuRef}>
-          {threads.map((t) => (
-            <div
-              key={t.threadId}
-              className={`relative flex items-center justify-between p-3 rounded-lg cursor-pointer group
-                ${t.threadId === activeThread
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"}`}
-              onClick={() => switchThread(t.threadId)}
-            >
-              <div className="flex-1 overflow-hidden">
-                <span className="text-sm truncate">{t.name || "New Chat"}</span>
-              </div>
-
-              <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setMenuOpen(menuOpen === t.threadId ? null : t.threadId); 
-                }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white transition-opacity"
-              >
-                ⋮
-              </button>
-
-              {menuOpen === t.threadId && (
-                <div className="absolute right-0 top-12 bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-10">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteThread(t.threadId);
-                    }}
-                    className="w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-700 space-y-2">
-          <Link
-            to="/contact"
-            onClick={() => setSidebarOpen(false)}
-            className="block px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            Contact
-          </Link>
-
-          <button
-            onClick={logout}
-            className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-          >
-            Logout
-          </button>
-        </div>
+        <button
+          onClick={handleNewChat}
+          className="w-full py-2.5 bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm rounded-lg transition"
+        >
+          + New Chat
+        </button>
       </div>
-    </>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-1" ref={menuRef}>
+        {threads.map((t) => (
+          <div
+            key={t.threadId}
+            className={`group relative flex items-center justify-between p-2 rounded-lg border transition cursor-pointer
+              ${t.threadId === activeThread
+                ? "bg-blue-500/20 border-blue-500/30 text-white"
+                : "bg-white/5 border-white/5 text-gray-300 hover:bg-white/10 hover:border-white/10 hover:text-white"}`}
+          >
+            <div onClick={() => switchThread(t.threadId)} className="flex-1 overflow-hidden">
+              <span className="text-sm truncate">{t.name || "New Chat"}</span>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === t.threadId ? null : t.threadId); }}
+              className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white transition"
+            >
+              ⋮
+            </button>
+
+            {menuOpen === t.threadId && (
+              <div className="absolute right-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-20">
+                <button
+                  onClick={() => deleteThread(t.threadId)}
+                  className="w-full px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-gray-700/30 space-y-2">
+        <Link
+          to="/contact"
+          className="flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
+        >
+          Contact
+        </Link>
+
+        <button
+          onClick={logout}
+          className="w-full py-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 rounded-lg transition"
+        >
+          Logout
+        </button>
+      </div>
+
+    </div>
   );
 }
