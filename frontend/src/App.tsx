@@ -10,9 +10,8 @@ import SystemLogs from "./components/SystemLogs";
 
 function App() {
   const [appState, setAppState] = useState("loading");
-
-  // token MUST be reactive
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
@@ -60,10 +59,16 @@ function App() {
               element={
                 token ? (
                   <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
-                    <Sidebar />
-                    <div className="flex-1 h-screen overflow-y-auto p-0">
+                    <Sidebar 
+                      sidebarOpen={sidebarOpen} 
+                      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                    />
+                    <div className={`flex-1 h-screen overflow-y-auto p-0 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
                       <div className="h-full w-full border border-[#2b2c2f] bg-[#111113]">
-                        <Chat />
+                        <Chat 
+                          sidebarOpen={sidebarOpen}
+                          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -78,8 +83,11 @@ function App() {
               element={
                 token ? (
                   <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
-                    <Sidebar />
-                    <div className="flex-1 h-screen overflow-y-auto p-4">
+                    <Sidebar 
+                      sidebarOpen={sidebarOpen} 
+                      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                    />
+                    <div className={`flex-1 h-screen overflow-y-auto p-4 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
                       <div className="h-full w-full border border-[#2b2c2f] bg-[#111113] rounded-lg">
                         <SystemLogs />
                       </div>
