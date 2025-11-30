@@ -51,26 +51,26 @@ function App() {
             {/* Login */}
             <Route
               path="/login"
-              element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
+              element={
+                !token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />
+              }
             />
 
-            {/* CHAT PAGE — FULLY RESPONSIVE */}
+            {/* CHAT — FULLY RESPONSIVE */}
             <Route
               path="/chat"
               element={
                 token ? (
-                  <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
+                  <div className="min-h-screen w-full bg-[#0d0d0e] text-white flex">
 
-                    {/* Sidebar — hidden on mobile */}
+                    {/* Sidebar on desktop only */}
                     <div className="hidden md:block">
                       <Sidebar />
                     </div>
 
-                    {/* Chat — full width on mobile */}
-                    <div className="flex-1 h-full overflow-y-auto">
-                      <div className="h-full w-full border border-[#2b2c2f] bg-[#111113]">
-                        <Chat />
-                      </div>
+                    {/* Chat area */}
+                    <div className="flex-1 overflow-hidden">
+                      <Chat />
                     </div>
 
                   </div>
@@ -80,20 +80,18 @@ function App() {
               }
             />
 
-            {/* SYSTEM LOGS — FULLY RESPONSIVE */}
+            {/* SYSTEM LOGS — RESPONSIVE */}
             <Route
               path="/system-logs"
               element={
                 token ? (
-                  <div className="h-screen w-screen bg-[#0d0d0e] text-white flex">
+                  <div className="min-h-screen w-full bg-[#0d0d0e] text-white flex">
 
-                    {/* Sidebar — hidden on mobile */}
                     <div className="hidden md:block">
                       <Sidebar />
                     </div>
 
-                    {/* Logs — full width on mobile */}
-                    <div className="flex-1 h-full overflow-y-auto p-4">
+                    <div className="flex-1 overflow-y-auto p-4">
                       <div className="h-full w-full border border-[#2b2c2f] bg-[#111113] rounded-lg">
                         <SystemLogs />
                       </div>
@@ -106,14 +104,16 @@ function App() {
               }
             />
 
-            {/* Default Redirect */}
-            <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
+            {/* Default redirect */}
+            <Route
+              path="/"
+              element={<Navigate to={token ? "/chat" : "/login"} replace />}
+            />
           </>
         )}
 
-        {/* Catch-All */}
+        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
-
       </Routes>
     </Router>
   );
