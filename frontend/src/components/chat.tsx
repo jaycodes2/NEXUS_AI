@@ -66,7 +66,7 @@ export default function Chat() {
   }, [messages]);
 
   return (
-    <div className="flex flex-col flex-1 bg-[#111113]">
+    <div className="flex flex-col h-full bg-[#111113]">
 
       {/* Header */}
       <div className="border-b border-gray-700 px-6 py-4 bg-[#111113] sticky top-0 z-20">

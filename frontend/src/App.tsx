@@ -61,7 +61,7 @@ function App() {
               path="/chat"
               element={
                 token ? (
-                  <div className="min-h-screen w-full bg-[#0d0d0e] text-white flex">
+                  <div className="h-screen w-full bg-[#0d0d0e] text-white flex">
 
                     {/* Sidebar on desktop only */}
                     <div className="hidden md:block">
