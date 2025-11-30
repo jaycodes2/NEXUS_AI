@@ -18,7 +18,6 @@ Yourseas AI is a production-ready full-stack conversational AI application that 
 
 <video width="1000" controls>
   <source src="https://github.com/jaycodes2/NEXUS_AI/raw/refs/heads/main/Complete%20working.mp4" type="video/mp4">
-  Your browser does not support the video tag.
 </video>
 
 
@@ -307,6 +306,11 @@ graph LR
 - Check application logs for detailed error messages
 - Verify all environment variables are set
 - Ensure all dependencies are properly installed
+
+## Demo Link
+https://drive.google.com/file/d/180vxW467imJziPIteKN8XO_rPA_fDEjo/view?usp=sharing
+
+
 
 ## 👥 Contributing
 
