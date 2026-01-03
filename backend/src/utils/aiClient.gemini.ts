@@ -1,32 +1,69 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIClient } from "./aiClient";
-import { dot } from "node:test/reporters";
-import * as dotenv from "dotenv"
+import { GoogleGenerativeAI, SchemaType, Tool } from "@google/generative-ai";
+import * as dotenv from "dotenv";
+import { performDeleteThread } from "../controllers/threadController.js";
+
 dotenv.config();
-const apiKey = process.env.GEMINI_API_KEY!;
-const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
-if (!apiKey) throw new Error("GEMINI_API_KEY missing in .env");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const genAI = new GoogleGenerativeAI(apiKey);
-// ... existing imports and API key check ...
+// Define the shape of the arguments the AI will send us
+interface DeleteThreadArgs {
+    threadId?: string;
+}
 
-const model = genAI.getGenerativeModel({ 
-    model: modelName,
-    // This is the "brain surgery" that stops the stars from appearing
-    systemInstruction: "You are a helpful assistant. Respond in plain text ONLY. Do not use Markdown formatting, bolding, or asterisks.",
-});
+const threadTools: Tool[] = [{
+    functionDeclarations: [{
+        name: "deleteThread",
+        description: "Deletes the current chat thread and all history from the database.",
+        parameters: {
+            type: SchemaType.OBJECT,
+            properties: {
+                threadId: {
+                    type: SchemaType.STRING,
+                    description: "The unique ID of the thread to delete.",
+                },
+            },
+            required: ["threadId"],
+        },
+    }],
+}];
 
 export const geminiClient = {
-    async chat(prompt: string): Promise<string> {
-        const resp = await model.generateContent(prompt);
-        let text = resp.response.text().trim();
-        
-        // Safety net: force-remove any remaining double asterisks
-        text = text.replace(/\*\*/g, "");
+    async chat(prompt: string, userId: string, currentThreadId: string): Promise<string> {
+        const model = genAI.getGenerativeModel({
+            model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+            systemInstruction: `You are Nexus AI. Respond in plain text. 
+            The current thread ID is: ${currentThreadId}. 
+            If asked to delete or clear this chat, you MUST call deleteThread using this ID.`,
+            tools: threadTools as any,
+        });
 
-        if (!text)
-            throw new Error("Empty response from Gemini");
-        return text;
+        const chat = model.startChat();
+        let result = await chat.sendMessage(prompt);
+        let response = result.response;
+
+        const call = response.functionCalls()?.[0];
+
+        if (call && call.name === "deleteThread") {
+            // ✅ FIX: Cast 'args' to our interface to avoid the TS error
+            const args = call.args as DeleteThreadArgs;
+            
+            // Safety fallback: Use the ID we passed from the controller if the AI misses it
+            const idToUse = args.threadId || currentThreadId;
+
+            console.log(`🤖 Agent executing delete for: ${idToUse}`);
+            const toolResult = await performDeleteThread(userId, idToUse);
+
+            const finalResponse = await chat.sendMessage([{
+                functionResponse: {
+                    name: "deleteThread",
+                    response: toolResult
+                }
+            }]);
+
+            return finalResponse.response.text().trim();
+        }
+
+        return response.text().trim().replace(/\*\*/g, "");
     },
 };

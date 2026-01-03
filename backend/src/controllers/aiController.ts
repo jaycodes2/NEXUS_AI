@@ -3,47 +3,61 @@ import { History } from "../models/historyModels.js";
 import { Thread } from "../models/threadModel.js";
 import { geminiClient as ai } from "../utils/aiClient.gemini.js";
 import { AuthedRequest } from "../middleware/auth.js";
-import { ApiLog } from "../models/ApiLog.js"; // ← New MongoDB model
+import { ApiLog } from "../models/ApiLog.js";
+
+/**
+ * ✅ Helper: Title Generator
+ * Placed here to ensure 'handleAIQuery' can find it.
+ */
+function generateTitle(prompt: string, reply: string) {
+  let base = prompt.length < 50 ? prompt : reply;
+  // Clean special characters and limit to 5 words
+  base = base.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+  return base.split(" ").slice(0, 5).join(" ") || "New Chat";
+}
+
 export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
   try {
     const { prompt, threadId } = req.body;
     const userId = req.auth?.userId;
 
-    if (!prompt || !threadId) {
+    if (!prompt || !threadId || !userId) {
       return res.status(400).json({ error: "prompt and threadId are required" });
     }
-    // ✅ Log request to MySQL (Backend Metrics)
+
+    // 1. Log metrics
     await ApiLog.create({
-                endpoint: "/api/ai/query",
-                method: req.method,
-                input_size: prompt.length,
-                userId
-            });
+      endpoint: "/api/ai/query",
+      method: req.method,
+      input_size: prompt.length,
+      userId
+    });
 
-
-    // ✅ Ensure thread exists
+    // 2. Ensure thread exists before chat
     let thread = await Thread.findOne({ userId, threadId });
     if (!thread) {
-      thread = await Thread.create({
-        userId,
-        threadId,
-        name: "New Chat",
-      });
+      thread = await Thread.create({ userId, threadId, name: "New Chat" });
     }
 
-    // ✅ Generate AI Response
-    const reply = await ai.chat(prompt);
+    // 3. Generate AI Response (Passing all 3 required args)
+    const reply = await ai.chat(prompt, userId, threadId);
 
-    // ✅ Save Message
+    // 4. Check if thread still exists (Agentic AI might have deleted it)
+    const activeThread = await Thread.findOne({ userId, threadId });
+    
+    if (!activeThread) {
+      // Return immediately if the thread was deleted by the AI tool
+      return res.json({ reply, threadDeleted: true });
+    }
+
+    // 5. Save History & Update metadata
     await History.create({ userId, threadId, prompt, reply });
-
-    // ✅ Update thread last active time
     await Thread.updateOne(
       { userId, threadId },
       { updatedAt: Date.now() }
     );
 
-    // ✅ Auto-title the thread only on first message
+    // 6. Auto-title only on the first message
     const count = await History.countDocuments({ userId, threadId });
     if (count === 1) {
       const title = generateTitle(prompt, reply);
@@ -61,14 +75,6 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
   }
 };
 
-// ✅ Title Generator
-function generateTitle(prompt: string, reply: string) {
-  let base = prompt.length < 50 ? prompt : reply;
-  base = base.replace(/[^a-zA-Z0-9 ]/g, "").trim();
-  return base.split(" ").slice(0, 5).join(" ") || "New Chat";
-}
-
-
 export const getHistory = async (req: AuthedRequest, res: Response) => {
   try {
     const userId = req.auth?.userId;
@@ -79,7 +85,6 @@ export const getHistory = async (req: AuthedRequest, res: Response) => {
     }
 
     const results = await History.find({ userId, threadId }).sort({ createdAt: 1 });
-
     return res.json(results);
 
   } catch (error) {
