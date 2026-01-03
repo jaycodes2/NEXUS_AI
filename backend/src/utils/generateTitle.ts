@@ -12,9 +12,16 @@ export async function generateTitleFromMessage(message: string): Promise<string>
   `;
 
   try {
-    const result = await ai.chat(prompt);
+    /**
+     * ✅ THE FIX:
+     * We pass 'SYSTEM' as the userId and threadId.
+     * This tells our Gemini client that this is an internal background task,
+     * not a user-facing chat session that needs 'Delete' tools.
+     */
+    const result = await ai.chat(prompt, "SYSTEM", "TITLE_GENERATOR");
     return result.trim();
-  } catch {
+  } catch (error) {
+    console.error("Title Generation Error:", error);
     return message.slice(0, 20) || "New Chat";
   }
 }
