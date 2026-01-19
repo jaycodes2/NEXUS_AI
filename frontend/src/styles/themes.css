@@ -1,0 +1,402 @@
+/* ============================================
+   NEXUS AI - Theme System
+   4 Themes: Light, Dark, OLED, High-Contrast
+   ============================================ */
+
+/* ---- Light Theme ---- */
+:root[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+  
+  /* Brand / Accent */
+  --accent-primary: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-subtle: #eef2ff;
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  
+  /* Semantic */
+  --success: #22c55e;
+  --success-subtle: #dcfce7;
+  --warning: #f59e0b;
+  --warning-subtle: #fef3c7;
+  --error: #ef4444;
+  --error-subtle: #fee2e2;
+  --info: #3b82f6;
+  --info-subtle: #dbeafe;
+  
+  /* Borders */
+  --border-default: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #6366f1;
+  
+  /* Message Bubbles */
+  --bubble-user-bg: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --bubble-user-text: #ffffff;
+  --bubble-assistant-bg: #f1f5f9;
+  --bubble-assistant-text: #0f172a;
+  --bubble-assistant-border: #e2e8f0;
+  
+  /* Code Blocks */
+  --code-bg: #1e293b;
+  --code-text: #e2e8f0;
+  --code-inline-bg: rgba(99, 102, 241, 0.1);
+  --code-inline-text: #6366f1;
+  
+  /* Input */
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-focus-border: #6366f1;
+  --input-placeholder: #94a3b8;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* ---- Dark Theme ---- */
+:root[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #0f0f14;
+  --bg-tertiary: #16161d;
+  --bg-elevated: #1c1c26;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0f172a;
+  
+  /* Brand / Accent */
+  --accent-primary: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-subtle: rgba(129, 140, 248, 0.12);
+  --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+  
+  /* Semantic */
+  --success: #4ade80;
+  --success-subtle: rgba(74, 222, 128, 0.12);
+  --warning: #fbbf24;
+  --warning-subtle: rgba(251, 191, 36, 0.12);
+  --error: #f87171;
+  --error-subtle: rgba(248, 113, 113, 0.12);
+  --info: #60a5fa;
+  --info-subtle: rgba(96, 165, 250, 0.12);
+  
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-focus: #818cf8;
+  
+  /* Message Bubbles */
+  --bubble-user-bg: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --bubble-user-text: #ffffff;
+  --bubble-assistant-bg: rgba(255, 255, 255, 0.03);
+  --bubble-assistant-text: #f8fafc;
+  --bubble-assistant-border: rgba(255, 255, 255, 0.06);
+  
+  /* Code Blocks */
+  --code-bg: rgba(0, 0, 0, 0.4);
+  --code-text: #e2e8f0;
+  --code-inline-bg: rgba(139, 92, 246, 0.15);
+  --code-inline-text: #c4b5fd;
+  
+  /* Input */
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --input-border: rgba(255, 255, 255, 0.08);
+  --input-focus-border: #818cf8;
+  --input-placeholder: #64748b;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.2);
+}
+
+/* ---- OLED True-Black Theme ---- */
+:root[data-theme="oled"] {
+  /* Backgrounds */
+  --bg-primary: #000000;
+  --bg-secondary: #050505;
+  --bg-tertiary: #0a0a0a;
+  --bg-elevated: #111111;
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+  
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-inverse: #000000;
+  
+  /* Brand / Accent */
+  --accent-primary: #a78bfa;
+  --accent-hover: #c4b5fd;
+  --accent-subtle: rgba(167, 139, 250, 0.1);
+  --accent-gradient: linear-gradient(135deg, #7c3aed, #a855f7);
+  
+  /* Semantic */
+  --success: #22c55e;
+  --success-subtle: rgba(34, 197, 94, 0.1);
+  --warning: #eab308;
+  --warning-subtle: rgba(234, 179, 8, 0.1);
+  --error: #ef4444;
+  --error-subtle: rgba(239, 68, 68, 0.1);
+  --info: #3b82f6;
+  --info-subtle: rgba(59, 130, 246, 0.1);
+  
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-focus: #a78bfa;
+  
+  /* Message Bubbles */
+  --bubble-user-bg: linear-gradient(135deg, #7c3aed, #a855f7);
+  --bubble-user-text: #ffffff;
+  --bubble-assistant-bg: #0a0a0a;
+  --bubble-assistant-text: #ffffff;
+  --bubble-assistant-border: rgba(255, 255, 255, 0.08);
+  
+  /* Code Blocks */
+  --code-bg: #000000;
+  --code-text: #e2e8f0;
+  --code-inline-bg: rgba(167, 139, 250, 0.12);
+  --code-inline-text: #c4b5fd;
+  
+  /* Input */
+  --input-bg: #050505;
+  --input-border: rgba(255, 255, 255, 0.1);
+  --input-focus-border: #a78bfa;
+  --input-placeholder: #71717a;
+  
+  /* Shadows */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-glow: 0 0 40px rgba(167, 139, 250, 0.15);
+}
+
+/* ---- High Contrast Accessibility Theme ---- */
+:root[data-theme="high-contrast"] {
+  /* Backgrounds */
+  --bg-primary: #000000;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #262626;
+  --bg-elevated: #333333;
+  --bg-overlay: rgba(0, 0, 0, 0.9);
+  
+  /* Text - Maximum Contrast */
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #e5e5e5;
+  --text-inverse: #000000;
+  
+  /* Brand / Accent - High Visibility Yellow */
+  --accent-primary: #ffff00;
+  --accent-hover: #ffff66;
+  --accent-subtle: rgba(255, 255, 0, 0.2);
+  --accent-gradient: linear-gradient(135deg, #ffff00, #00ffff);
+  
+  /* Semantic - Maximum Saturation */
+  --success: #00ff00;
+  --success-subtle: rgba(0, 255, 0, 0.2);
+  --warning: #ffff00;
+  --warning-subtle: rgba(255, 255, 0, 0.2);
+  --error: #ff0000;
+  --error-subtle: rgba(255, 0, 0, 0.2);
+  --info: #00ffff;
+  --info-subtle: rgba(0, 255, 255, 0.2);
+  
+  /* Borders - Visible */
+  --border-default: #ffffff;
+  --border-subtle: #999999;
+  --border-focus: #ffff00;
+  
+  /* Message Bubbles */
+  --bubble-user-bg: #0066cc;
+  --bubble-user-text: #ffffff;
+  --bubble-assistant-bg: #333333;
+  --bubble-assistant-text: #ffffff;
+  --bubble-assistant-border: #ffffff;
+  
+  /* Code Blocks */
+  --code-bg: #1a1a1a;
+  --code-text: #ffffff;
+  --code-inline-bg: #333333;
+  --code-inline-text: #00ffff;
+  
+  /* Input */
+  --input-bg: #1a1a1a;
+  --input-border: #ffffff;
+  --input-focus-border: #ffff00;
+  --input-placeholder: #999999;
+  
+  /* Shadows - Replaced with borders for visibility */
+  --shadow-sm: 0 0 0 1px #ffffff;
+  --shadow-md: 0 0 0 2px #ffffff;
+  --shadow-lg: 0 0 0 3px #ffffff;
+  --shadow-glow: 0 0 0 3px #ffff00;
+}
+
+/* ============================================
+   Theme Transitions
+   ============================================ */
+:root {
+  transition: 
+    background-color 0.3s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   Chat-Specific Animations
+   ============================================ */
+
+/* Message Entry */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-enter {
+  animation: messageSlideIn 0.25s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Typing Indicator Bounce */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.typing-dot {
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-primary); }
+  50% { box-shadow: 0 0 20px 4px var(--accent-primary); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin 1.5s linear infinite;
+}
+
+/* Shimmer for skeletons */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Utility Classes for Chat
+   ============================================ */
+
+/* Glassmorphism */
+.glass {
+  background: var(--bubble-assistant-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-default);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus Ring */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--border-focus);
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

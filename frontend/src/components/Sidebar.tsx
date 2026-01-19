@@ -144,6 +144,7 @@ export default function Sidebar() {
         >
           Contact
         </Link>
+        
 
         <button
           onClick={logout}
