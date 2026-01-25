@@ -99,14 +99,15 @@ export default function SidebarContent({ className, isMobile, onClose }: Sidebar
       <div className="p-4 border-b border-gray-700/30">
         <div className={`flex items-center ${effectiveCollapsed ? "justify-center" : "space-x-4"} mb-6`}>
           {/* Mobile does not show the collapse toggle here; it's handled by parent overlay or strictly expanded */}
-          {!isMobile && (
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-gray-400 hover:text-white transition p-1 hover:bg-white/10 rounded"
-            >
-              <Menu size={20} />
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (isMobile && onClose) onClose();
+              else setIsCollapsed(!isCollapsed);
+            }}
+            className="text-gray-400 hover:text-white transition p-1 hover:bg-white/10 rounded"
+          >
+            <Menu size={20} />
+          </button>
 
           {!effectiveCollapsed && (
             <div>
