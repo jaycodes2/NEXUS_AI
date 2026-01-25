@@ -69,28 +69,23 @@ function App() {
               element={
                 token ? (
                   <div className="h-screen w-full bg-[#0d0d0e] text-white flex">
-
-
-                    {/* Sidebar on desktop only */}
-                    <div className="hidden md:block">
-                      <Sidebar />
+                    {/* Unified Sidebar - Push Layout */}
+                    <div className={`${isMobileMenuOpen ? "block" : "hidden md:block"} h-full flex-shrink-0`}>
+                      <Sidebar
+                        isMobile={isMobileMenuOpen}
+                        onClose={() => setIsMobileMenuOpen(false)}
+                      />
                     </div>
+
+
+
 
                     {/* Chat area */}
                     <div className="flex-1 overflow-hidden">
                       <Chat />
                     </div>
 
-                    {/* Mobile Sidebar Overlay */}
-                    {isMobileMenuOpen && (
-                      <div className="fixed inset-0 z-[100] flex md:hidden">
-                        <div
-                          className="fixed inset-0 bg-black/60 transition-opacity"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        />
-                        <Sidebar isMobile onClose={() => setIsMobileMenuOpen(false)} />
-                      </div>
-                    )}
+
 
                   </div>
                 ) : (
