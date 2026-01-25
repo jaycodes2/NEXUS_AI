@@ -11,6 +11,13 @@ import SystemLogs from "./components/SystemLogs";
 function App() {
   const [appState, setAppState] = useState("loading");
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenSidebar = () => setIsMobileMenuOpen(true);
+    window.addEventListener("open-sidebar", handleOpenSidebar);
+    return () => window.removeEventListener("open-sidebar", handleOpenSidebar);
+  }, []);
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
@@ -63,6 +70,7 @@ function App() {
                 token ? (
                   <div className="h-screen w-full bg-[#0d0d0e] text-white flex">
 
+
                     {/* Sidebar on desktop only */}
                     <div className="hidden md:block">
                       <Sidebar />
@@ -72,6 +80,17 @@ function App() {
                     <div className="flex-1 overflow-hidden">
                       <Chat />
                     </div>
+
+                    {/* Mobile Sidebar Overlay */}
+                    {isMobileMenuOpen && (
+                      <div className="fixed inset-0 z-[100] flex md:hidden">
+                        <div
+                          className="fixed inset-0 bg-black/60 transition-opacity"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        />
+                        <Sidebar isMobile onClose={() => setIsMobileMenuOpen(false)} />
+                      </div>
+                    )}
 
                   </div>
                 ) : (

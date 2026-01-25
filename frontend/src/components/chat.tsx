@@ -119,6 +119,20 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-full bg-[#212121] text-[#ececec]">
 
+      {/* Mobile Header */}
+      <div className="md:hidden flex-shrink-0 w-full z-10 flex items-center p-3 border-b border-[#2b2c2f] bg-[#212121]">
+        <button
+          onClick={() => {
+            window.dispatchEvent(new Event("open-sidebar"));
+          }}
+          className="p-2 text-white hover:bg-[#2f2f2f] rounded-md transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
       {/* MESSAGES AREA - ChatGPT Style */}
       <div className="flex-1 overflow-y-auto">
 
@@ -326,7 +340,7 @@ export default function Chat() {
       </div>
 
       {/* INPUT AREA - Exact ChatGPT Style */}
-      <div className="bg-[#212121] px-4 pb-4 pt-2">
+      <div className="bg-[#212121] px-4 pb-4 pt-2 relative z-10">
         <div className="max-w-3xl mx-auto">
           <div className="relative flex items-end gap-2 bg-[#2f2f2f] rounded-3xl border border-[#424242] px-3 py-2">
             {/* Attach Button */}
