@@ -33,7 +33,7 @@ const threadTools: Tool[] = [
 ];
 
 export const geminiClient = {
-    async chat(prompt: string, userId: string, currentThreadId: string): Promise<string> {
+    async chat(prompt: string, userId: string, currentThreadId: string, history: any[] = []): Promise<string> {
         const model = genAI.getGenerativeModel({
             model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
             systemInstruction: `You are Nexus AI. Respond in plain text. 
@@ -48,7 +48,16 @@ export const geminiClient = {
             tools: threadTools as any,
         });
 
-        const chat = model.startChat();
+        // Convert DB history to Gemini format
+        const chatHistory = history.flatMap(msg => [
+            { role: "user", parts: [{ text: msg.prompt }] },
+            { role: "model", parts: [{ text: msg.reply }] }
+        ]);
+
+        const chat = model.startChat({
+            history: chatHistory
+        });
+
         let result = await chat.sendMessage(prompt);
         let response = result.response;
 
@@ -79,4 +88,13 @@ export const geminiClient = {
 
         return response.text().trim().replace(/\*\*/g, "");
     },
+
+    async raw(prompt: string): Promise<string> {
+        const model = genAI.getGenerativeModel({
+            model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+        });
+
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    }
 };
