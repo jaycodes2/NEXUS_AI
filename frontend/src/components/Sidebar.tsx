@@ -1,34 +1,38 @@
-import { useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getThreadId, newThread } from "../utils/thread";
-// Added only the necessary component imports
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Sidebar as ShadcnSidebar } from "@/components/ui/sidebar"
-import { Menu, Plus, MessageSquare, LogOut, Mail } from "lucide-react";
-
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  MessageSquare,
+  MoreHorizontal,
+  Trash2,
+  Mail,
+  LogOut,
+  Plus,
+  ChevronsUpDown,
+  Search,
+} from "lucide-react";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
 interface SidebarProps {
   className?: string;
-  isMobile?: boolean; // If true, forces expanded view and specific mobile styles
+  isMobile?: boolean;
   onClose?: () => void;
 }
 
-export default function SidebarContent({ className, isMobile, onClose }: SidebarProps) {
+export default function Sidebar({ className, isMobile, onClose }: SidebarProps) {
   const [threads, setThreads] = useState<any[]>([]);
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [isThreadsOpen, setIsThreadsOpen] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [search, setSearch] = useState("");
 
   const activeThread = getThreadId();
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-
-  // Force expanded state on mobile
-  const effectiveCollapsed = isMobile ? false : isCollapsed;
 
   async function loadThreads() {
     try {
@@ -37,30 +41,24 @@ export default function SidebarContent({ className, isMobile, onClose }: Sidebar
       });
       const data = await res.json();
       setThreads(data);
-    } catch (error) {
-      console.error("Failed to load threads:", error);
+    } catch (err) {
+      console.error("Failed to load threads:", err);
     }
   }
 
-  useEffect(() => {
-    loadThreads();
-  }, []);
+  useEffect(() => { loadThreads(); }, []);
 
   async function deleteThread(threadId: string) {
-    if (!window.confirm("Are you sure you want to delete this chat?")) return;
+    if (!window.confirm("Delete this chat?")) return;
     try {
       await fetch(`${API_URL}/api/ai/threads/${threadId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (threadId === activeThread) {
-        newThread();
-        if (isMobile && onClose) onClose();
-      }
+      if (threadId === activeThread) { newThread(); if (isMobile && onClose) onClose(); }
       await loadThreads();
-      setMenuOpen(null);
-    } catch (error) {
-      console.error("Failed to delete thread:", error);
+    } catch (err) {
+      console.error("Failed to delete:", err);
     }
   }
 
@@ -84,128 +82,129 @@ export default function SidebarContent({ className, isMobile, onClose }: Sidebar
     window.location.href = "/";
   }
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(null);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+  const filtered = threads.filter((t) =>
+    (t.name || "New Chat").toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className={`${effectiveCollapsed ? "w-20" : "w-64"} ${isMobile ? "bg-[#0d0d0e] z-[100] border-r border-gray-800 h-screen" : "bg-gray-900/80 backdrop-blur-xl border-r border-gray-700/30 h-full"} flex flex-col transition-all duration-300 relative ${className || ""}`}>
-      <div className="p-4 border-b border-gray-700/30">
-        <div className={`flex items-center ${effectiveCollapsed ? "justify-center" : "space-x-4"} mb-6`}>
-          {/* Mobile does not show the collapse toggle here; it's handled by parent overlay or strictly expanded */}
-          <button
-            onClick={() => {
-              if (isMobile && onClose) onClose();
-              else setIsCollapsed(!isCollapsed);
-            }}
-            className="text-gray-400 hover:text-white transition p-1 hover:bg-white/10 rounded"
-          >
-            <Menu size={20} />
-          </button>
-
-          {!effectiveCollapsed && (
-            <div>
-              <h1 className="text-lg font-semibold text-white">Chat</h1>
-              <p className="text-xs text-gray-400">Conversations</p>
-            </div>
-          )}
+    <div
+      className={`
+        flex flex-col h-full w-[248px] shrink-0
+        bg-[#0a0a0a] border-r border-[#1f1f1f] text-sm text-[#a1a1aa]
+        ${className ?? ""}
+      `}
+    >
+      {/* ── App Header (like version switcher) ── */}
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-[#1f1f1f]">
+        {/* App icon */}
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1d4ed8]">
+          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 4h4l8 11V4h3v16h-4L9 9v11H6V4z" />
+          </svg>
         </div>
-
+        <div className="flex-1 min-w-0">
+          <div className="text-[13px] font-semibold text-[#fafafa] truncate leading-tight">NEXUS</div>
+          <div className="text-[11px] text-[#71717a] leading-tight">v1.0.0</div>
+        </div>
         <button
           onClick={handleNewChat}
-          className={`flex items-center justify-center ${effectiveCollapsed ? "w-10 h-10 p-0" : "w-full py-2.5 px-3 space-x-2"} bg-white/10 hover:bg-white/15 border border-white/10 text-white text-sm rounded-lg transition overflow-hidden`}
+          className="flex items-center justify-center h-6 w-6 rounded-md text-[#71717a] hover:text-[#fafafa] hover:bg-[#1f1f1f] transition-colors"
+          title="New Chat"
         >
-          <Plus size={18} />
-          {!effectiveCollapsed && <span>New Chat</span>}
+          <Plus size={14} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-1" ref={menuRef}>
-        {/* --- COLLAPSIBLE START --- */}
-        {effectiveCollapsed ? (
-          <div className="space-y-2 flex flex-col items-center">
-            {threads.map((t) => (
-              <div
-                key={t.threadId}
-                onClick={() => switchThread(t.threadId)}
-                className={` w-10 h-10 flex items-center justify-center rounded-lg cursor-pointer transition
-                    ${t.threadId === activeThread
-                    ? "bg-blue-500/20 text-blue-400"
-                    : "text-gray-500 hover:text-white hover:bg-white/10"}`}
-                title={t.name || "New Chat"}
-              >
-                <MessageSquare size={18} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Collapsible open={isThreadsOpen} onOpenChange={setIsThreadsOpen}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-white transition">
-              Recent Threads
-              <span>{isThreadsOpen ? "−" : "+"}</span>
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="space-y-1">
-              {threads.map((t) => (
-                <div
-                  key={t.threadId}
-                  className={`group relative flex items-center justify-between p-2 rounded-lg border transition cursor-pointer
-                  ${t.threadId === activeThread
-                      ? "bg-blue-500/20 border-blue-500/30 text-white"
-                      : "bg-white/5 border-white/5 text-gray-300 hover:bg-white/10 hover:border-white/10 hover:text-white"}`}
-                >
-                  <div onClick={() => switchThread(t.threadId)} className="flex-1 overflow-hidden flex items-center space-x-2">
-                    <MessageSquare size={14} className="opacity-70" />
-                    <span className="text-sm truncate">{t.name || "New Chat"}</span>
-                  </div>
-
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setMenuOpen(menuOpen === t.threadId ? null : t.threadId); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-white transition"
-                  >
-                    ⋮
-                  </button>
-
-                  {menuOpen === t.threadId && (
-                    <div className="absolute right-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 z-20">
-                      <button
-                        onClick={() => deleteThread(t.threadId)}
-                        className="w-full px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-        {/* --- COLLAPSIBLE END --- */}
+      {/* ── Search ── */}
+      <div className="px-3 py-2 border-b border-[#1f1f1f]">
+        <div className="flex items-center gap-2 rounded-md border border-[#27272a] bg-[#111111] px-3 py-1.5">
+          <Search size={13} className="shrink-0 text-[#52525b]" />
+          <input
+            type="text"
+            placeholder="Search chats..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-transparent text-xs text-[#a1a1aa] placeholder-[#52525b] focus:outline-none"
+          />
+        </div>
       </div>
 
-      <div className={`flex-shrink-0 p-4 border-t border-gray-700/30 space-y-2 ${effectiveCollapsed ? "flex flex-col items-center" : ""}`}>
+      {/* ── Thread List ── */}
+      <div className="flex-1 overflow-y-auto py-2 px-2 scrollbar-hide">
+        {/* Section label */}
+        <div className="px-2 py-1.5 text-[11px] font-medium text-[#52525b] uppercase tracking-wider">
+          Recent
+        </div>
+
+        {filtered.length === 0 && (
+          <p className="px-2 py-4 text-xs text-[#3f3f46] text-center">
+            {search ? "No results found" : "No conversations yet"}
+          </p>
+        )}
+
+        {filtered.map((t) => {
+          const isActive = t.threadId === activeThread;
+          return (
+            <div
+              key={t.threadId}
+              className={`
+                group relative flex items-center rounded-md transition-colors mb-0.5
+                ${isActive
+                  ? "bg-[#1f1f1f] text-[#fafafa]"
+                  : "text-[#a1a1aa] hover:bg-[#141414] hover:text-[#fafafa]"}
+              `}
+            >
+              <button
+                onClick={() => switchThread(t.threadId)}
+                className="flex flex-1 items-center gap-2 overflow-hidden px-2 py-1.5 text-left"
+              >
+                <MessageSquare size={13} className="shrink-0 opacity-60" />
+                <span className="truncate text-[13px]">{t.name || "New Chat"}</span>
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="
+                      mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded
+                      opacity-0 group-hover:opacity-100 focus:opacity-100
+                      text-[#52525b] hover:text-[#fafafa] transition-all
+                    "
+                  >
+                    <MoreHorizontal size={13} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-32">
+                  <DropdownMenuItem
+                    className="text-red-400 focus:text-red-400 focus:bg-red-500/10 gap-2 cursor-pointer text-xs"
+                    onClick={() => deleteThread(t.threadId)}
+                  >
+                    <Trash2 size={12} />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="shrink-0 border-t border-[#1f1f1f] px-2 py-2 space-y-0.5">
         <Link
           to="/contact"
-          className={`flex items-center ${effectiveCollapsed ? "justify-center w-10 h-10" : "px-3 py-2 space-x-3"} text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition`}
-          title="Contact"
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-[#71717a] hover:text-[#fafafa] hover:bg-[#141414] transition-colors"
         >
-          <Mail size={18} />
-          {!effectiveCollapsed && <span>Contact</span>}
+          <Mail size={14} className="shrink-0" />
+          Contact
         </Link>
         <button
           onClick={logout}
-          className={`flex items-center ${effectiveCollapsed ? "justify-center w-10 h-10" : "w-full py-2 space-x-2 justify-center"} bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 rounded-lg transition`}
-          title="Logout"
+          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-[#71717a] hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
-          <LogOut size={18} />
-          {!effectiveCollapsed && <span>Logout</span>}
+          <LogOut size={14} className="shrink-0" />
+          Log out
         </button>
       </div>
     </div>
