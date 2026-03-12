@@ -251,3 +251,19 @@ body,
 *::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
+/* Add this to your global CSS */
+.prose * {
+  transition: all 0.1s ease-in-out;
+}
+
+/* This prevents the "flash" of unformatted text 
+   by ensuring minimum line heights */
+.prose p {
+  min-height: 1.5rem;
+}
+.prose p {
+  margin-bottom: 1.25em;
+  line-height: 1.75;
+  /* This prevents the "jumping" when markdown finishes a bold/italic tag */
+  overflow-anchor: none; 
+}
