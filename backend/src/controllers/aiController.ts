@@ -15,11 +15,17 @@ function generateTitle(prompt: string, reply: string) {
 
 export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
   try {
-    const { prompt, threadId } = req.body;
+    const { prompt, threadId, file } = req.body;
+    // file is optional: { base64: string, mimeType: string, name: string }
     const userId = req.auth?.userId;
 
     if (!prompt || !threadId || !userId) {
       return res.status(400).json({ error: "prompt and threadId are required" });
+    }
+
+    // File size guard — base64 of 10MB ≈ 13.6M chars
+    if (file?.base64 && file.base64.length > 14_000_000) {
+      return res.status(413).json({ error: "File too large. Maximum size is 10MB." });
     }
 
     // FIX 1: Run all pre-flight work in parallel instead of sequentially.
@@ -55,7 +61,7 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
     }
 
     // Stream response
-    const stream = ai.chat(augmentedPrompt, userId, threadId, previousHistory);
+    const stream = ai.chat(augmentedPrompt, userId, threadId, previousHistory, file ?? undefined);
     let fullReply = "";
 
     for await (const chunk of stream) {

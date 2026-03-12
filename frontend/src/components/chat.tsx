@@ -4,22 +4,53 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Paperclip, Globe, AtSign, ArrowUp, Plus } from "lucide-react";
+import { Paperclip, Globe, AtSign, ArrowUp, Plus, X, FileText, Image } from "lucide-react";
 import "@fontsource/geist-mono/400.css";
 import "@fontsource/geist-mono/500.css";
 
 const GEIST_MONO = '"Geist Mono", "GeistMono", ui-monospace, monospace';
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 const MAX_RETRIES = 3;
+
+const ACCEPTED_TYPES: Record<string, string> = {
+  "application/pdf": "PDF",
+  "image/jpeg": "Image",
+  "image/png": "Image",
+  "image/webp": "Image",
+  "image/gif": "Image",
+  "text/plain": "Text",
+  "text/markdown": "Text",
+  "application/typescript": "Code",
+  "application/javascript": "Code",
+  "text/x-python": "Code",
+  "text/x-typescript": "Code",
+  "text/x-javascript": "Code",
+  "text/css": "Code",
+  "text/html": "Code",
+  "application/json": "JSON",
+};
+
+// We also accept by extension for types browsers misidentify
+const ACCEPTED_EXTENSIONS = [".pdf",".jpg",".jpeg",".png",".webp",".gif",".txt",".md",".ts",".tsx",".js",".jsx",".py",".css",".html",".json",".csv",".env",".yaml",".yml"];
+
+interface AttachedFile {
+  name: string;
+  mimeType: string;
+  base64: string;
+  sizeKB: number;
+}
 const RETRY_DELAY_MS = 1500;
 
 export default function Chat() {
   const [threadId, setThreadId] = useState(getThreadId());
   const [prompt, setPrompt] = useState("");
-  const [messages, setMessages] = useState<{ prompt: string; reply: string; feedback?: "good" | "bad" }[]>([]);
+  const [messages, setMessages] = useState<{ prompt: string; reply: string; feedback?: "good" | "bad"; fileName?: string }[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [threadLoading, setThreadLoading] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -88,6 +119,54 @@ export default function Chat() {
     ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
   }, [prompt]);
 
+  // ── File picker ───────────────────────────────────────────────────────────
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    setFileError(null);
+    const f = e.target.files?.[0];
+    if (!e.target.files) return;
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+    if (!f) return;
+
+    // Size check — 10MB
+    if (f.size > 10 * 1024 * 1024) {
+      setFileError("File too large. Maximum size is 10MB.");
+      return;
+    }
+
+    // Type check — by MIME or extension
+    const ext = "." + f.name.split(".").pop()?.toLowerCase();
+    if (!ACCEPTED_TYPES[f.type] && !ACCEPTED_EXTENSIONS.includes(ext)) {
+      setFileError("Unsupported file type. Supported: PDF, images, text, code files.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data:mime/type;base64, prefix
+      const base64 = result.split(",")[1];
+      // For plain text files the browser may give text/plain — normalise code extensions
+      let mimeType = f.type || "text/plain";
+      if (!mimeType || mimeType === "application/octet-stream") {
+        mimeType = "text/plain";
+      }
+      setAttachedFile({
+        name: f.name,
+        mimeType,
+        base64,
+        sizeKB: Math.round(f.size / 1024),
+      });
+    };
+    reader.onerror = () => setFileError("Failed to read file. Please try again.");
+    reader.readAsDataURL(f);
+  }
+
+  function removeFile() {
+    setAttachedFile(null);
+    setFileError(null);
+  }
+
   // ── FIX 1: SSE stream with retry on network drop ───────────────────────────
   async function sendPrompt(customPrompt?: string) {
     const promptText = customPrompt || prompt;
@@ -98,10 +177,20 @@ export default function Chat() {
 
     setLoading(true);
     replyBufferRef.current = "";
-    setMessages((prev) => [...prev, { prompt: currentPrompt, reply: "" }]);
+    setMessages((prev) => [...prev, { prompt: currentPrompt, reply: "", fileName: attachedFile?.name }]);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
 
-    const requestBody = JSON.stringify({ prompt: currentPrompt, threadId });
+    const filePayload = attachedFile ? {
+      base64: attachedFile.base64,
+      mimeType: attachedFile.mimeType,
+      name: attachedFile.name,
+    } : undefined;
+
+    // Clear file attachment immediately on send
+    setAttachedFile(null);
+    setFileError(null);
+
+    const requestBody = JSON.stringify({ prompt: currentPrompt, threadId, file: filePayload });
     let retryCount = 0;
 
     const flushBuffer = () => {
@@ -323,6 +412,13 @@ export default function Chat() {
                 {/* USER MESSAGE */}
                 <div className="flex justify-end">
                   <div className="max-w-[80%] bg-[#111111] rounded-2xl rounded-br-sm px-4 py-3 text-[#ececec] text-[15px] border border-[#1a1a1a] break-words">
+                    {/* File attachment badge */}
+                    {m.fileName && (
+                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-[#2a2a2a]">
+                        <FileText size={12} className="text-orange-400 flex-shrink-0" />
+                        <span className="text-[12px] text-[#888] truncate">{m.fileName}</span>
+                      </div>
+                    )}
                     {m.prompt}
                   </div>
                 </div>
@@ -467,8 +563,48 @@ export default function Chat() {
       <div className="flex-shrink-0 bg-black px-3 md:px-4 pb-4 md:pb-5 pt-2">
         <div className="w-full max-w-3xl mx-auto">
           <div className="bg-[#0b0b0b] rounded-2xl border border-[#1a1a1a]">
-            <div className="px-3 pt-3 pb-1">
-              <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#111111] hover:bg-[#1f1f1f] text-[#ececec] text-sm">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.md,.ts,.tsx,.js,.jsx,.py,.css,.html,.json,.csv,.env,.yaml,.yml"
+              onChange={handleFileSelect}
+            />
+
+            <div className="px-3 pt-3 pb-1 space-y-2">
+              {/* Attached file pill */}
+              {attachedFile && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#111] border border-[#2a2a2a] w-fit max-w-full">
+                  <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center">
+                    {attachedFile.mimeType.startsWith("image/")
+                      ? <Image size={13} className="text-blue-400" />
+                      : <FileText size={13} className="text-orange-400" />
+                    }
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12px] text-[#ececec] truncate max-w-[180px]">{attachedFile.name}</p>
+                    <p className="text-[11px] text-[#555]">{attachedFile.sizeKB}KB</p>
+                  </div>
+                  <button
+                    onClick={removeFile}
+                    className="flex-shrink-0 ml-1 text-[#555] hover:text-[#ececec] transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+
+              {/* File error */}
+              {fileError && (
+                <p className="text-[11px] text-red-400 px-1">{fileError}</p>
+              )}
+
+              {/* Add context button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#111111] hover:bg-[#1f1f1f] text-[#ececec] text-sm transition-colors"
+              >
                 <AtSign size={13} />
                 <span className="text-[13px]">Add context</span>
               </button>

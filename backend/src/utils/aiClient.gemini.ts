@@ -156,7 +156,8 @@ export const geminiClient = {
     prompt: string,
     userId: string,
     currentThreadId: string,
-    history: any[] = []
+    history: any[] = [],
+    file?: { base64: string; mimeType: string; name: string }
   ): AsyncGenerator<string> {
     const model = genAI.getGenerativeModel({
       model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
@@ -209,7 +210,20 @@ RULE 5 — HOW TO PRESENT CODE EXECUTION RESULTS:
 
     // We may need multiple rounds of tool calls before a final text response
     // (e.g. search → summarise → run code → explain output)
-    let currentMessages: any[] = [prompt];
+    // Build initial message — text only, or text + file if provided
+    let currentMessages: any[] = file
+      ? [
+          {
+            inlineData: {
+              mimeType: file.mimeType,
+              data: file.base64,
+            },
+          },
+          {
+            text: prompt + `\n\n[User attached file: ${file.name}]`,
+          },
+        ]
+      : [prompt];
     let roundsLeft = 5; // max tool call rounds to prevent infinite loops
 
     while (roundsLeft-- > 0) {
