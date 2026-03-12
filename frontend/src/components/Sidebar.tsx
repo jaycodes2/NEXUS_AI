@@ -47,6 +47,12 @@ export default function Sidebar({ className, isMobile, onClose }: SidebarProps) 
   }
 
   useEffect(() => { loadThreads(); }, []);
+  // Reload when AI tool deletes a thread
+useEffect(() => {
+  const handler = () => loadThreads();
+  window.addEventListener("thread-deleted", handler);
+  return () => window.removeEventListener("thread-deleted", handler);
+}, []);
 
   async function deleteThread(threadId: string) {
     if (!window.confirm("Delete this chat?")) return;

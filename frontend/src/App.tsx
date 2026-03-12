@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HashRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
 import Login from "./components/Login";
@@ -9,7 +9,6 @@ import ContactPage from "./pages/Contact";
 import SystemLogs from "./components/SystemLogs";
 import { PanelLeft, ChevronRight } from "lucide-react";
 
-// Breadcrumb header — matches the shadcn docs top bar exactly
 function TopBar({
   sidebarOpen,
   onToggleSidebar,
@@ -21,7 +20,6 @@ function TopBar({
 }) {
   return (
     <div className="flex h-12 shrink-0 items-center gap-2 border-b border-[#1f1f1f] px-4 bg-[#0a0a0a]">
-      {/* Sidebar toggle */}
       <button
         onClick={onToggleSidebar}
         className="flex h-7 w-7 items-center justify-center rounded-md text-[#52525b] hover:text-[#fafafa] hover:bg-[#1f1f1f] transition-colors"
@@ -32,18 +30,11 @@ function TopBar({
 
       <div className="h-4 w-px bg-[#27272a] mx-1" />
 
-      {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-sm">
         {breadcrumbs.map((crumb, i) => (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight size={13} className="text-[#3f3f46]" />}
-            <span
-              className={
-                i === breadcrumbs.length - 1
-                  ? "font-semibold text-[#fafafa]"
-                  : "text-[#71717a]"
-              }
-            >
+            <span className={i === breadcrumbs.length - 1 ? "font-semibold text-[#fafafa]" : "text-[#71717a]"}>
               {crumb}
             </span>
           </span>
@@ -53,7 +44,6 @@ function TopBar({
   );
 }
 
-// Chat layout with sidebar + top bar
 function ChatLayout({
   token,
   isMobileMenuOpen,
@@ -65,20 +55,55 @@ function ChatLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Close mobile drawer on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileMenuOpen) setIsMobileMenuOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isMobileMenuOpen, setIsMobileMenuOpen]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileMenuOpen]);
+
   if (!token) return <Navigate to="/login" replace />;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0a] text-white">
-      {/* Sidebar */}
-      {(sidebarOpen || isMobileMenuOpen) && (
-        <Sidebar
-          isMobile={isMobileMenuOpen}
-          onClose={() => {
-            setIsMobileMenuOpen(false);
-            if (isMobileMenuOpen) setSidebarOpen(false);
-          }}
+
+      {/* Desktop sidebar — hidden on mobile */}
+      {sidebarOpen && (
+        <div className="hidden md:flex flex-shrink-0 h-full">
+          <Sidebar />
+        </div>
+      )}
+
+      {/* Mobile backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
+
+      {/* Mobile drawer — slides in from left */}
+      <div
+        className={`
+          md:hidden fixed top-0 left-0 h-full z-50
+          transform transition-transform duration-250 ease-in-out
+          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        <Sidebar
+          isMobile
+          onClose={() => setIsMobileMenuOpen(false)}
+        />
+      </div>
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -124,10 +149,11 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Listen for "open-sidebar" fired from the mobile header hamburger in chat.tsx
   useEffect(() => {
-    const handleOpenSidebar = () => setIsMobileMenuOpen(true);
-    window.addEventListener("open-sidebar", handleOpenSidebar);
-    return () => window.removeEventListener("open-sidebar", handleOpenSidebar);
+    const handler = () => setIsMobileMenuOpen(true);
+    window.addEventListener("open-sidebar", handler);
+    return () => window.removeEventListener("open-sidebar", handler);
   }, []);
 
   useEffect(() => {
@@ -136,9 +162,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    function handleStorage() {
-      setToken(localStorage.getItem("token"));
-    }
+    const handleStorage = () => setToken(localStorage.getItem("token"));
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
@@ -163,9 +187,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/login"
-              element={
-                !token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />
-              }
+              element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
             />
             <Route
               path="/chat"
@@ -177,14 +199,8 @@ function App() {
                 />
               }
             />
-            <Route
-              path="/system-logs"
-              element={<SystemLogsLayout token={token} />}
-            />
-            <Route
-              path="/"
-              element={<Navigate to={token ? "/chat" : "/login"} replace />}
-            />
+            <Route path="/system-logs" element={<SystemLogsLayout token={token} />} />
+            <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
           </>
         )}
 
