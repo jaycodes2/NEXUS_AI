@@ -21,7 +21,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/ai", searchRoutes); // 🔥 semantic search
 app.use("/api/contact", contactRoutes);
-app.use("/api/ai", memoryRoutes);
+app.use("/api", memoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "";

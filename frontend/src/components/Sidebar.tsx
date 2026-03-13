@@ -16,6 +16,7 @@ import {
   Plus,
   Search,
   Download,
+  Brain,
 } from "lucide-react";
 import { fetchAndExport } from "../utils/useExport";
 
@@ -212,6 +213,13 @@ export default function Sidebar({ className, isMobile, onClose }: SidebarProps) 
 
       {/* Footer */}
       <div className="shrink-0 border-t border-[#1f1f1f] px-2 py-2 space-y-0.5">
+        <Link
+          to="/memory"
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-[#71717a] hover:text-[#fafafa] hover:bg-[#141414] transition-colors"
+        >
+          <Brain size={14} className="shrink-0" />
+          Memory Search
+        </Link>
         <Link
           to="/contact"
           className="flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-[#71717a] hover:text-[#fafafa] hover:bg-[#141414] transition-colors"

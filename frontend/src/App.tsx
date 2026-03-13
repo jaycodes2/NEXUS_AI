@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportMarkdown, exportPDF } from "./utils/useExport";
+import MemorySearch from "./pages/MemorySearch";
 import { getThreadId } from "./utils/thread";
 
 // Breadcrumb header — matches the shadcn docs top bar exactly
@@ -234,6 +235,21 @@ function App() {
             <Route
               path="/system-logs"
               element={<SystemLogsLayout token={token} />}
+            />
+            <Route
+              path="/memory"
+              element={
+                token ? (
+                  <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0a] text-white">
+                    <div className="hidden md:flex flex-shrink-0 h-full">
+                      <Sidebar />
+                    </div>
+                    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                      <MemorySearch />
+                    </div>
+                  </div>
+                ) : <Navigate to="/login" replace />
+              }
             />
             <Route
               path="/"
