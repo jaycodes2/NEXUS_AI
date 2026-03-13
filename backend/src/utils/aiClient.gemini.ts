@@ -32,13 +32,17 @@ const allTools: Tool[] = [
       // ── 2. Web Search ─────────────────────────────────────────────────────
       {
         name: "webSearch",
-        description: `Search the internet for real-time information. 
-          Use this when the user asks about:
-          - Current events, news, prices, weather, sports scores
-          - Anything that may have changed recently
-          - Topics you are not confident about or that need up-to-date data
-          - Specific URLs, companies, people, products
-          DO NOT use for general knowledge you already have.`,
+        description: `Search the internet for REAL-TIME information only.
+          ONLY use this for:
+          - Breaking news, current events happening now or recently
+          - Live data: stock prices, sports scores, weather
+          - Product releases, updates, or announcements after 2024
+          - Specific URLs the user wants fetched
+          NEVER use this for:
+          - Scientific facts, constants, formulas (e.g. speed of light, Pythagorean theorem)
+          - Historical events, definitions, concepts
+          - Anything well-covered by training data
+          If you already know the answer — do NOT search, just answer.`,
         parameters: {
           type: SchemaType.OBJECT,
           properties: {
@@ -179,8 +183,10 @@ RULE 1 — CODE EXECUTION (MOST IMPORTANT):
 - After executeCode returns, present the ACTUAL stdout/stderr from the result exactly as given
 
 RULE 2 — WEB SEARCH:
-- Any question about current events, news, prices, scores, recent releases → call webSearch
-- Do not answer from your training data if the info could be outdated
+- ONLY call webSearch when the answer requires real-time or recent data that your training cannot provide
+- GOOD reasons to search: breaking news, current prices, live scores, recent product releases, today's weather, events after 2024
+- BAD reasons to search: scientific constants, historical facts, math, definitions, how-to questions, anything your training data covers well
+- If you already know the answer confidently from training data → answer directly, do NOT search
 - After webSearch returns, cite sources with URLs
 
 RULE 3 — THREAD DELETION:

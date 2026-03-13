@@ -51,6 +51,9 @@ export default function Chat() {
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: "error" | "info" }[]>([]);
+  const toastIdRef = useRef(0);
+  const [typingStatus, setTypingStatus] = useState<string>("");
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -119,6 +122,17 @@ export default function Chat() {
     ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
   }, [prompt]);
 
+  // ── Toast helpers ─────────────────────────────────────────────────────────
+  function showToast(message: string, type: "error" | "info" = "error") {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }
+
+  function dismissToast(id: number) {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }
+
   // ── File picker ───────────────────────────────────────────────────────────
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     setFileError(null);
@@ -131,6 +145,7 @@ export default function Chat() {
     // Size check — 10MB
     if (f.size > 10 * 1024 * 1024) {
       setFileError("File too large. Maximum size is 10MB.");
+      showToast("File too large. Maximum size is 10MB.");
       return;
     }
 
@@ -138,6 +153,7 @@ export default function Chat() {
     const ext = "." + f.name.split(".").pop()?.toLowerCase();
     if (!ACCEPTED_TYPES[f.type] && !ACCEPTED_EXTENSIONS.includes(ext)) {
       setFileError("Unsupported file type. Supported: PDF, images, text, code files.");
+      showToast("Unsupported file type.");
       return;
     }
 
@@ -158,7 +174,7 @@ export default function Chat() {
         sizeKB: Math.round(f.size / 1024),
       });
     };
-    reader.onerror = () => setFileError("Failed to read file. Please try again.");
+    reader.onerror = () => { setFileError("Failed to read file."); showToast("Failed to read file. Please try again."); };
     reader.readAsDataURL(f);
   }
 
@@ -176,6 +192,7 @@ export default function Chat() {
     if (!customPrompt) setPrompt("");
 
     setLoading(true);
+    setTypingStatus("Thinking...");
     replyBufferRef.current = "";
     setMessages((prev) => [...prev, { prompt: currentPrompt, reply: "", fileName: attachedFile?.name }]);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -260,6 +277,12 @@ export default function Chat() {
                 const parsed = JSON.parse(dataStr);
                 if (parsed.chunk) {
                   replyBufferRef.current += parsed.chunk;
+                  // Update typing status based on tool indicators in stream
+                  const current = replyBufferRef.current;
+                  if (current.includes("🔍 Searching")) setTypingStatus("Searching the web...");
+                  else if (current.includes("⚙️ Running")) setTypingStatus("Running code...");
+                  else if (current.includes("🗑️")) setTypingStatus("Deleting thread...");
+                  else if (replyBufferRef.current.length > 0) setTypingStatus("");
                   if (!rafRef.current) rafRef.current = requestAnimationFrame(flushBuffer);
                 }
               } catch { /* incomplete JSON */ }
@@ -279,21 +302,21 @@ export default function Chat() {
 
       } catch (err: any) {
         if (err?.name === "AbortError") return;
+        const errMsg = retryCount >= MAX_RETRIES
+          ? `Connection failed after ${MAX_RETRIES} retries. Please check your network.`
+          : "Something went wrong. Please try again.";
+        showToast(errMsg);
         setMessages((prev) => {
           const updated = [...prev];
           const last = updated.length - 1;
           if (updated[last]) {
-            updated[last] = {
-              ...updated[last],
-              reply: retryCount >= MAX_RETRIES
-                ? `⚠️ Connection failed after ${MAX_RETRIES} retries. Please check your network and try again.`
-                : "⚠️ Something went wrong. Please try again.",
-            };
+            updated[last] = { ...updated[last], reply: `⚠️ ${errMsg}` };
           }
           return updated;
         });
       } finally {
         setLoading(false);
+        setTypingStatus("");
         activeReaderRef.current = null;
         abortControllerRef.current = null;
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
@@ -392,7 +415,7 @@ export default function Chat() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
 
         {messages.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4 pb-32">
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 pb-24">
             <div className="w-14 h-14 rounded-2xl bg-[#0b0b0b] border border-[#1a1a1a] flex items-center justify-center mb-5">
               <svg className="w-7 h-7 text-white/90" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M6 4h4l8 11V4h3v16h-4L9 9v11H6V4z" />
@@ -400,7 +423,26 @@ export default function Chat() {
               </svg>
             </div>
             <h1 className="text-2xl font-semibold mb-2 text-white">How can I help you today?</h1>
-            <p className="text-[#6b6b6b] text-sm max-w-sm">Ask me anything. I'm here to assist.</p>
+            <p className="text-[#6b6b6b] text-sm max-w-sm mb-8">Ask me anything. I'm here to assist.</p>
+
+            {/* Suggestion chips */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
+              {[
+                { label: "Search the web", sub: "Find latest news or info", prompt: "Search the web for the latest AI news today" },
+                { label: "Run some code", sub: "Execute and verify output", prompt: "Run this JavaScript: console.log([1,2,3,4,5].reduce((a,b) => a+b, 0))" },
+                { label: "Explain a concept", sub: "Break down any topic", prompt: "Explain how vector embeddings work in simple terms" },
+                { label: "Review my code", sub: "Attach a file to get started", prompt: "Review my code for bugs and improvements" },
+              ].map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => sendPrompt(s.prompt)}
+                  className="flex flex-col items-start gap-0.5 px-4 py-3 rounded-xl bg-[#0d0d0d] border border-[#1f1f1f] hover:border-[#2a2a2a] hover:bg-[#111] transition-all text-left group"
+                >
+                  <span className="text-[13px] font-medium text-[#ececec] group-hover:text-white transition-colors">{s.label}</span>
+                  <span className="text-[12px] text-[#555]">{s.sub}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -542,14 +584,24 @@ export default function Chat() {
               </div>
             ))}
 
-            {/* Typing dots — only while waiting for first token */}
+            {/* Typing indicator — shows status while waiting for first token */}
             {loading && messages[messages.length - 1]?.reply === "" && (
-              <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[#0b0b0b] border border-[#1a1a1a] flex-shrink-0" />
-                <div className="flex items-center gap-1 pt-2">
-                  <div className="w-1.5 h-1.5 bg-[#6b6b6b] rounded-full animate-bounce" />
-                  <div className="w-1.5 h-1.5 bg-[#6b6b6b] rounded-full animate-bounce [animation-delay:0.2s]" />
-                  <div className="w-1.5 h-1.5 bg-[#6b6b6b] rounded-full animate-bounce [animation-delay:0.4s]" />
+              <div className="flex gap-3 items-start">
+                <div className="w-7 h-7 rounded-lg bg-[#0b0b0b] border border-[#1a1a1a] flex-shrink-0 flex items-center justify-center mt-0.5">
+                  <svg className="w-4 h-4 text-white/90" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 4h4l8 11V4h3v16h-4L9 9v11H6V4z" />
+                    <path d="M19 4h-2v2h2V4zM7 20h2v-2H7v2z" opacity="0.5" />
+                  </svg>
+                </div>
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-[#555] rounded-full animate-bounce" />
+                    <div className="w-1.5 h-1.5 bg-[#555] rounded-full animate-bounce [animation-delay:0.15s]" />
+                    <div className="w-1.5 h-1.5 bg-[#555] rounded-full animate-bounce [animation-delay:0.3s]" />
+                  </div>
+                  {typingStatus && (
+                    <span className="text-[11px] text-[#555] animate-pulse">{typingStatus}</span>
+                  )}
                 </div>
               </div>
             )}
@@ -557,6 +609,31 @@ export default function Chat() {
             <div ref={bottomRef} />
           </div>
         )}
+      </div>
+
+      {/* Toast container */}
+      <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`
+              pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl
+              border text-sm max-w-sm animate-in slide-in-from-right-2 fade-in duration-200
+              ${toast.type === "error"
+                ? "bg-[#1a0a0a] border-red-500/30 text-red-300"
+                : "bg-[#0a0a1a] border-blue-500/30 text-blue-300"
+              }
+            `}
+          >
+            <span className="flex-1 leading-snug">{toast.message}</span>
+            <button
+              onClick={() => dismissToast(toast.id)}
+              className="flex-shrink-0 text-[#555] hover:text-white transition-colors mt-0.5"
+            >
+              <X size={13} />
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* INPUT AREA */}
