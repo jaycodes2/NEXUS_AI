@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getThreadId, newThread } from "../utils/thread";
 import {
   DropdownMenu,
@@ -14,9 +14,10 @@ import {
   Mail,
   LogOut,
   Plus,
-  ChevronsUpDown,
   Search,
+  Download,
 } from "lucide-react";
+import { fetchAndExport } from "../utils/useExport";
 
 const API_URL = (import.meta as any).env?.VITE_API_URL;
 
@@ -47,12 +48,13 @@ export default function Sidebar({ className, isMobile, onClose }: SidebarProps) 
   }
 
   useEffect(() => { loadThreads(); }, []);
+
   // Reload when AI tool deletes a thread
-useEffect(() => {
-  const handler = () => loadThreads();
-  window.addEventListener("thread-deleted", handler);
-  return () => window.removeEventListener("thread-deleted", handler);
-}, []);
+  useEffect(() => {
+    const handler = () => loadThreads();
+    window.addEventListener("thread-deleted", handler);
+    return () => window.removeEventListener("thread-deleted", handler);
+  }, []);
 
   async function deleteThread(threadId: string) {
     if (!window.confirm("Delete this chat?")) return;
@@ -100,9 +102,8 @@ useEffect(() => {
         ${className ?? ""}
       `}
     >
-      {/* ── App Header (like version switcher) ── */}
+      {/* App Header */}
       <div className="flex items-center gap-2 px-3 py-3 border-b border-[#1f1f1f]">
-        {/* App icon */}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#1d4ed8]">
           <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 4h4l8 11V4h3v16h-4L9 9v11H6V4z" />
@@ -121,7 +122,7 @@ useEffect(() => {
         </button>
       </div>
 
-      {/* ── Search ── */}
+      {/* Search */}
       <div className="px-3 py-2 border-b border-[#1f1f1f]">
         <div className="flex items-center gap-2 rounded-md border border-[#27272a] bg-[#111111] px-3 py-1.5">
           <Search size={13} className="shrink-0 text-[#52525b]" />
@@ -135,9 +136,8 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ── Thread List ── */}
+      {/* Thread List */}
       <div className="flex-1 overflow-y-auto py-2 px-2 scrollbar-hide">
-        {/* Section label */}
         <div className="px-2 py-1.5 text-[11px] font-medium text-[#52525b] uppercase tracking-wider">
           Recent
         </div>
@@ -181,7 +181,21 @@ useEffect(() => {
                     <MoreHorizontal size={13} />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    className="gap-2 cursor-pointer text-xs"
+                    onClick={() => fetchAndExport(t.threadId, t.name || "conversation", "markdown")}
+                  >
+                    <Download size={12} />
+                    Export as Markdown
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="gap-2 cursor-pointer text-xs"
+                    onClick={() => fetchAndExport(t.threadId, t.name || "conversation", "pdf")}
+                  >
+                    <Download size={12} />
+                    Export as PDF
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-red-400 focus:text-red-400 focus:bg-red-500/10 gap-2 cursor-pointer text-xs"
                     onClick={() => deleteThread(t.threadId)}
@@ -196,7 +210,7 @@ useEffect(() => {
         })}
       </div>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <div className="shrink-0 border-t border-[#1f1f1f] px-2 py-2 space-y-0.5">
         <Link
           to="/contact"

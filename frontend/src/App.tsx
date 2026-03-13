@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
 import Login from "./components/Login";
@@ -7,19 +7,33 @@ import Welcome from "./components/Welcome";
 import Documentation from "./pages/Documentation";
 import ContactPage from "./pages/Contact";
 import SystemLogs from "./components/SystemLogs";
-import { PanelLeft, ChevronRight } from "lucide-react";
+import { PanelLeft, ChevronRight, Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { exportMarkdown, exportPDF } from "./utils/useExport";
+import { getThreadId } from "./utils/thread";
 
+// Breadcrumb header — matches the shadcn docs top bar exactly
 function TopBar({
   sidebarOpen,
   onToggleSidebar,
   breadcrumbs,
+  messages = [],
+  threadName = "conversation",
 }: {
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   breadcrumbs: string[];
+  messages?: any[];
+  threadName?: string;
 }) {
   return (
     <div className="flex h-12 shrink-0 items-center gap-2 border-b border-[#1f1f1f] px-4 bg-[#0a0a0a]">
+      {/* Sidebar toggle */}
       <button
         onClick={onToggleSidebar}
         className="flex h-7 w-7 items-center justify-center rounded-md text-[#52525b] hover:text-[#fafafa] hover:bg-[#1f1f1f] transition-colors"
@@ -30,20 +44,56 @@ function TopBar({
 
       <div className="h-4 w-px bg-[#27272a] mx-1" />
 
-      <nav className="flex items-center gap-1.5 text-sm">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1.5 text-sm flex-1 min-w-0">
         {breadcrumbs.map((crumb, i) => (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight size={13} className="text-[#3f3f46]" />}
-            <span className={i === breadcrumbs.length - 1 ? "font-semibold text-[#fafafa]" : "text-[#71717a]"}>
+            <span
+              className={
+                i === breadcrumbs.length - 1
+                  ? "font-semibold text-[#fafafa]"
+                  : "text-[#71717a]"
+              }
+            >
               {crumb}
             </span>
           </span>
         ))}
       </nav>
+
+      {/* Export button — only show when there are messages */}
+      {messages.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[#52525b] hover:text-[#fafafa] hover:bg-[#1f1f1f] transition-colors text-xs">
+              <Download size={13} />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer text-xs"
+              onClick={() => exportMarkdown(messages, threadName)}
+            >
+              <Download size={12} />
+              Markdown (.md)
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer text-xs"
+              onClick={() => exportPDF(messages, threadName)}
+            >
+              <Download size={12} />
+              PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }
 
+// Chat layout with sidebar + top bar
 function ChatLayout({
   token,
   isMobileMenuOpen,
@@ -54,56 +104,33 @@ function ChatLayout({
   setIsMobileMenuOpen: (v: boolean) => void;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatThreadName, setChatThreadName] = useState("conversation");
 
-  // Close mobile drawer on Escape
+  // Listen for messages exported from chat component
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isMobileMenuOpen) setIsMobileMenuOpen(false);
+    const handler = (e: any) => {
+      if (e.detail?.messages) setChatMessages(e.detail.messages);
+      if (e.detail?.threadName) setChatThreadName(e.detail.threadName);
     };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [isMobileMenuOpen, setIsMobileMenuOpen]);
-
-  // Lock body scroll when mobile drawer is open
-  useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isMobileMenuOpen]);
+    window.addEventListener("chat-state", handler);
+    return () => window.removeEventListener("chat-state", handler);
+  }, []);
 
   if (!token) return <Navigate to="/login" replace />;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0a] text-white">
-
-      {/* Desktop sidebar — hidden on mobile */}
-      {sidebarOpen && (
-        <div className="hidden md:flex flex-shrink-0 h-full">
-          <Sidebar />
-        </div>
-      )}
-
-      {/* Mobile backdrop */}
-      {isMobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
-          onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Mobile drawer — slides in from left */}
-      <div
-        className={`
-          md:hidden fixed top-0 left-0 h-full z-50
-          transform transition-transform duration-250 ease-in-out
-          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
+      {/* Sidebar */}
+      {(sidebarOpen || isMobileMenuOpen) && (
         <Sidebar
-          isMobile
-          onClose={() => setIsMobileMenuOpen(false)}
+          isMobile={isMobileMenuOpen}
+          onClose={() => {
+            setIsMobileMenuOpen(false);
+            if (isMobileMenuOpen) setSidebarOpen(false);
+          }}
         />
-      </div>
+      )}
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -111,6 +138,8 @@ function ChatLayout({
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           breadcrumbs={["Conversations", "Chat"]}
+          messages={chatMessages}
+          threadName={chatThreadName}
         />
         <div className="flex-1 overflow-hidden">
           <Chat />
@@ -149,11 +178,10 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Listen for "open-sidebar" fired from the mobile header hamburger in chat.tsx
   useEffect(() => {
-    const handler = () => setIsMobileMenuOpen(true);
-    window.addEventListener("open-sidebar", handler);
-    return () => window.removeEventListener("open-sidebar", handler);
+    const handleOpenSidebar = () => setIsMobileMenuOpen(true);
+    window.addEventListener("open-sidebar", handleOpenSidebar);
+    return () => window.removeEventListener("open-sidebar", handleOpenSidebar);
   }, []);
 
   useEffect(() => {
@@ -162,7 +190,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleStorage = () => setToken(localStorage.getItem("token"));
+    function handleStorage() {
+      setToken(localStorage.getItem("token"));
+    }
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
@@ -187,7 +217,9 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route
               path="/login"
-              element={!token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />}
+              element={
+                !token ? <Login updateToken={setToken} /> : <Navigate to="/chat" replace />
+              }
             />
             <Route
               path="/chat"
@@ -199,8 +231,14 @@ function App() {
                 />
               }
             />
-            <Route path="/system-logs" element={<SystemLogsLayout token={token} />} />
-            <Route path="/" element={<Navigate to={token ? "/chat" : "/login"} replace />} />
+            <Route
+              path="/system-logs"
+              element={<SystemLogsLayout token={token} />}
+            />
+            <Route
+              path="/"
+              element={<Navigate to={token ? "/chat" : "/login"} replace />}
+            />
           </>
         )}
 

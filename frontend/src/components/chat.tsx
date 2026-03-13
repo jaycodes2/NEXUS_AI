@@ -72,6 +72,13 @@ export default function Chat() {
     }, 100);
   }, []);
 
+  // ── Emit messages to TopBar whenever they change ─────────────────────────
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("chat-state", {
+      detail: { messages, threadName: threadId }
+    }));
+  }, [messages, threadId]);
+
   // ── Thread ID polling ──────────────────────────────────────────────────────
   useEffect(() => {
     const updateThreadId = () => {
