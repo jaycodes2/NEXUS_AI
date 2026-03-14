@@ -32,3 +32,4 @@ mongoose
   .catch(err => console.error(err));
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use(express.json({ limit: "15mb" }));

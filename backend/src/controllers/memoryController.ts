@@ -15,30 +15,57 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
 
         const queryEmbedding = await generateEmbedding(question);
 
-        const results = await History.aggregate([
-            {
-                $vectorSearch: {
-                    index: "history_vector_index",
-                    path: "replyEmbedding",
-                    queryVector: queryEmbedding,
-                    numCandidates: 1000,
-                    limit: 30
-                }
-            }
+        // Run both searches in parallel with userId filter inside the pipeline
+        // (same fix applied to rag.ts — filter in JS was leaking other users' data)
+        const [promptResults, replyResults] = await Promise.all([
+            History.aggregate([
+                {
+                    $vectorSearch: {
+                        index: "history_vector_index",
+                        path: "promptEmbedding",
+                        queryVector: queryEmbedding,
+                        numCandidates: 100,
+                        limit: 16,
+                        filter: { userId },
+                    }
+                },
+                { $addFields: { score: { $meta: "vectorSearchScore" } } }
+            ]),
+            History.aggregate([
+                {
+                    $vectorSearch: {
+                        index: "history_vector_index",
+                        path: "replyEmbedding",
+                        queryVector: queryEmbedding,
+                        numCandidates: 100,
+                        limit: 16,
+                        filter: { userId },
+                    }
+                },
+                { $addFields: { score: { $meta: "vectorSearchScore" } } }
+            ])
         ]);
 
-        const memories = results
-            .filter(r => r.userId === userId)
-            .slice(0, 8)
-            .map(
-                (r, i) =>
-                    `Memory ${i + 1}:\nUser: ${r.prompt}\nAssistant: ${r.reply}`
-            )
-            .join("\n\n");
+        // Merge, deduplicate, sort by score, take top 8
+        const seen = new Set<string>();
+        const merged = [...promptResults, ...replyResults]
+            .filter(doc => {
+                const id = doc._id.toString();
+                if (seen.has(id)) return false;
+                seen.add(id);
+                return true;
+            })
+            .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+            .slice(0, 8);
 
-        if (!memories) {
+        if (merged.length === 0) {
             return res.json({ answer: "No relevant past conversations found." });
         }
+
+        const memories = merged
+            .map((r, i) => `Memory ${i + 1}:\nUser: ${r.prompt}\nAssistant: ${r.reply}`)
+            .join("\n\n");
+
         const prompt = `
 You are an AI assistant helping a user reflect on their past conversations.
 
