@@ -3,8 +3,10 @@ import { AuthedRequest } from "../middleware/auth.js";
 import { History } from "../models/historyModels.js";
 import { generateEmbedding } from "../utils/embedding.gemini.js";
 import { geminiClient as ai } from "../utils/aiClient.gemini.js";
+import { memoryLogger } from "../utils/logger.js";
 
 export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
+    const start = Date.now();
     try {
         const userId = req.auth?.userId;
         const { question } = req.body;
@@ -14,9 +16,9 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
         }
 
         const queryEmbedding = await generateEmbedding(question);
+        const embedMs = Date.now() - start;
 
-        // Run both searches in parallel with userId filter inside the pipeline
-        // (same fix applied to rag.ts — filter in JS was leaking other users' data)
+        const searchStart = Date.now();
         const [promptResults, replyResults] = await Promise.all([
             History.aggregate([
                 {
@@ -45,6 +47,7 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
                 { $addFields: { score: { $meta: "vectorSearchScore" } } }
             ])
         ]);
+        const searchMs = Date.now() - searchStart;
 
         // Merge, deduplicate, sort by score, take top 8
         const seen = new Set<string>();
@@ -57,6 +60,16 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
             })
             .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
             .slice(0, 8);
+
+        memoryLogger.info({
+            userId,
+            event: "memory_search",
+            query: question.slice(0, 80),
+            results: merged.length,
+            topScore: merged[0]?.score?.toFixed(3) ?? null,
+            embedMs,
+            searchMs,
+        }, `Memory search — found ${merged.length} results in ${searchMs}ms`);
 
         if (merged.length === 0) {
             return res.json({ answer: "No relevant past conversations found." });
@@ -84,12 +97,21 @@ ${question}
 Respond in a helpful, honest, and clear manner.
 `.trim();
 
+        const aiStart = Date.now();
         const answer = await ai.raw(prompt);
+        const aiMs = Date.now() - aiStart;
+
+        memoryLogger.info({
+            userId,
+            event: "memory_answer_generated",
+            ms: Date.now() - start,
+            aiMs,
+        }, "Memory answer generated");
 
         return res.json({ answer });
 
     } catch (error) {
-        console.error("askMyPastChats error:", error);
+        memoryLogger.error({ err: error, event: "memory_error", ms: Date.now() - start }, "askMyPastChats error");
         return res.status(500).json({ error: "Failed to query memory" });
     }
 };

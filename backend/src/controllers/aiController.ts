@@ -6,6 +6,7 @@ import { AuthedRequest } from "../middleware/auth.js";
 import { ApiLog } from "../models/ApiLog.js";
 import { generateEmbedding } from "../utils/embedding.gemini.js";
 import { retrieveRelevantMemory } from "../utils/rag.js";
+import { aiLogger } from "../utils/logger.js";
 
 function generateTitle(prompt: string, reply: string) {
   let base = prompt.length < 50 ? prompt : reply;
@@ -14,6 +15,7 @@ function generateTitle(prompt: string, reply: string) {
 }
 
 export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
+  const start = Date.now();
   try {
     const { prompt, threadId, file } = req.body;
     // file is optional: { base64: string, mimeType: string, name: string }
@@ -50,6 +52,15 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
       ? `You have access to relevant past conversations.\n\n${memoryContext}\n\nCurrent user message:\n${prompt}`
       : prompt;
 
+    aiLogger.info({
+      userId,
+      threadId,
+      event: "ai_query_start",
+      promptLen: prompt.length,
+      hasFile: !!file,
+      memoryCount: memory.length,
+    }, "AI query started");
+
     // Set SSE headers
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -71,6 +82,14 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
 
     res.write(`data: [DONE]\n\n`);
     res.end();
+
+    aiLogger.info({
+      userId,
+      threadId,
+      event: "ai_query_complete",
+      replyLen: fullReply.length,
+      ms: Date.now() - start,
+    }, `AI query complete in ${Date.now() - start}ms`);
 
     // FIX 3: Post-stream work runs fully in background — doesn't block or slow anything
     // Use setImmediate to ensure it doesn't block the event loop after res.end()
@@ -101,7 +120,7 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
     });
 
   } catch (error) {
-    console.error("handleAIQuery Error:", error);
+    aiLogger.error({ err: error, userId: req.auth?.userId, event: "ai_query_error", ms: Date.now() - start }, "handleAIQuery error");
     if (!res.headersSent) {
       return res.status(500).json({ error: "Internal Server Error" });
     }
