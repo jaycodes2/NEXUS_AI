@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import User from "../models/userModel.js";
+import User, { IUser } from "../models/userModel.js";
 import { authLogger } from "./logger.js";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
@@ -23,7 +23,7 @@ passport.use(
         }
 
         // Check if user already exists by googleId or email
-        let user = await User.findOne({
+        let user = await User.findOne<IUser>({
           $or: [{ googleId: profile.id }, { email }],
         });
 

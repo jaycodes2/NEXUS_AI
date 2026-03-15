@@ -2,6 +2,7 @@ import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import { register, login } from "../controllers/authController.js";
+import { IUser } from "../models/userModel.js";
 import { authLimiter } from "../utils/rateLimiter.js";
 import "../utils/passport.js";
 import { authLogger } from "../utils/logger.js";
@@ -35,13 +36,13 @@ router.get(
   }),
   (req, res) => {
     try {
-      const user = req.user as any;
+      const user = req.user as IUser;
       if (!user) {
         return res.redirect(`${FRONTEND_URL}/#/login?error=oauth_failed`);
       }
 
       // Sign JWT exactly like email login
-      const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
+      const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: "7d" });
 
       authLogger.info({
         event: "google_oauth_success",
