@@ -27,6 +27,11 @@ app.use(requestLogger);
 app.use(globalLimiter);
 app.use(passport.initialize()); // Global fallback rate limit
 
+// ── Health check ─────────────────────────────────────────────────────────────
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
