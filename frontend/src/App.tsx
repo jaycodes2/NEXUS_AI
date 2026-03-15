@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { HashRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Chat from "./components/chat";
 import Login from "./components/Login";
 import Welcome from "./components/Welcome";
 import Documentation from "./pages/Documentation";
 import ContactPage from "./pages/Contact";
-import SystemLogs from "./components/SystemLogs";
 import { PanelLeft, ChevronRight, Download } from "lucide-react";
 import {
   DropdownMenu,
@@ -17,7 +16,6 @@ import {
 import { exportMarkdown, exportPDF } from "./utils/useExport";
 import MemorySearch from "./pages/MemorySearch";
 import OAuthCallback from "./components/OAuthCallback";
-import { getThreadId } from "./utils/thread";
 
 // Breadcrumb header — matches the shadcn docs top bar exactly
 function TopBar({
@@ -123,16 +121,30 @@ function ChatLayout({
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0a] text-white">
-      {/* Sidebar */}
-      {(sidebarOpen || isMobileMenuOpen) && (
-        <Sidebar
-          isMobile={isMobileMenuOpen}
-          onClose={() => {
-            setIsMobileMenuOpen(false);
-            if (isMobileMenuOpen) setSidebarOpen(false);
-          }}
+      {/* Desktop sidebar */}
+      {sidebarOpen && (
+        <div className="hidden md:flex flex-shrink-0 h-full">
+          <Sidebar />
+        </div>
+      )}
+
+      {/* Mobile backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
         />
       )}
+
+      {/* Mobile drawer */}
+      <div
+        className={`md:hidden fixed top-0 left-0 h-full z-50 transform transition-transform duration-250 ease-in-out ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <Sidebar isMobile onClose={() => setIsMobileMenuOpen(false)} />
+      </div>
 
       {/* Main content */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -151,29 +163,7 @@ function ChatLayout({
   );
 }
 
-function SystemLogsLayout({ token }: { token: string | null }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  if (!token) return <Navigate to="/login" replace />;
-
-  return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#0a0a0a] text-white">
-      {sidebarOpen && <Sidebar />}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopBar
-          sidebarOpen={sidebarOpen}
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          breadcrumbs={["System", "Logs"]}
-        />
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="h-full w-full border border-[#1f1f1f] bg-[#111111] rounded-lg">
-            <SystemLogs />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function App() {
   const [appState, setAppState] = useState("loading");
@@ -232,10 +222,6 @@ function App() {
                   setIsMobileMenuOpen={setIsMobileMenuOpen}
                 />
               }
-            />
-            <Route
-              path="/system-logs"
-              element={<SystemLogsLayout token={token} />}
             />
             <Route
               path="/memory"

@@ -72,7 +72,8 @@ const NAV_ITEMS = [
 ];
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-export default function Documentation({ onBack }: { onBack: () => void }) {
+export default function Documentation({ onBack }: { onBack?: () => void }) {
+  const handleBack = onBack ?? (() => window.history.back());
   const [activeSection, setActiveSection] = useState("overview");
   const mainRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +92,7 @@ export default function Documentation({ onBack }: { onBack: () => void }) {
       <aside className="hidden lg:flex flex-col w-60 flex-shrink-0 py-8 px-4 overflow-y-auto"
         style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
         {/* Back */}
-        <button onClick={onBack}
+        <button onClick={handleBack}
           className="flex items-center gap-2 text-neutral-500 hover:text-white text-sm mb-8 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -128,7 +129,7 @@ export default function Documentation({ onBack }: { onBack: () => void }) {
         {/* Mobile back button */}
         <div className="lg:hidden sticky top-0 z-10 px-4 py-3 flex items-center gap-3"
           style={{ background: "rgba(0,0,0,0.9)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <button onClick={onBack} className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm transition-colors">
+          <button onClick={handleBack} className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
