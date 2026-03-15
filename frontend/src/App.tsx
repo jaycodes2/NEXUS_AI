@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { exportMarkdown, exportPDF } from "./utils/useExport";
 import MemorySearch from "./pages/MemorySearch";
+import OAuthCallback from "./components/OAuthCallback";
 import { getThreadId } from "./utils/thread";
 
 // Breadcrumb header — matches the shadcn docs top bar exactly
@@ -258,6 +259,7 @@ function App() {
           </>
         )}
 
+        <Route path="/auth/callback" element={<OAuthCallback updateToken={setToken} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

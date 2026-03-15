@@ -34,6 +34,11 @@ export async function register(req: Request, res: Response) {
 
     const existing = await User.findOne({ email: email.toLowerCase().trim() });
     if (existing) {
+      // If account exists via Google, tell them to use Google
+      if (existing.authProvider === "google" && !existing.passwordHash) {
+        authLogger.warn({ ip, email, event: "register_failed", reason: "google_account_exists" }, "Register failed — account exists via Google");
+        return res.status(409).json({ message: "This email is linked to a Google account. Please sign in with Google." });
+      }
       authLogger.warn({ ip, email, event: "register_failed", reason: "email_taken" }, "Register failed — email already exists");
       return res.status(409).json({ message: "An account with this email already exists." });
     }
@@ -75,6 +80,12 @@ export async function login(req: Request, res: Response) {
     if (!user) {
       authLogger.warn({ ip, email, event: "login_failed", reason: "user_not_found" }, "Login failed — user not found");
       return res.status(401).json({ message: "No account found with this email." });
+    }
+
+    // Block password login for OAuth-only accounts
+    if (!user.passwordHash) {
+      authLogger.warn({ ip, email, userId: user._id.toString(), event: "login_failed", reason: "oauth_only_account" }, "Login failed — account uses Google sign-in");
+      return res.status(401).json({ message: "This account uses Google sign-in. Please click the Google button to continue." });
     }
 
     const ok = await bcrypt.compare(password, user.passwordHash);
