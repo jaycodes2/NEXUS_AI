@@ -64,15 +64,13 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
             })
             .sort((a, b) => {
                 if (isRecencyQuery) {
-                    // For recency queries — sort by date descending, use score as tiebreaker
                     const dateDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                    if (Math.abs(dateDiff) > 60000) return dateDiff; // more than 1 min apart — use date
-                    return (b.score ?? 0) - (a.score ?? 0); // within 1 min — use score
+                    if (Math.abs(dateDiff) > 60000) return dateDiff;
+                    return (b.score ?? 0) - (a.score ?? 0);
                 }
-                // For regular queries — sort by score, use date as tiebreaker
                 const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
-                if (Math.abs(scoreDiff) > 0.05) return scoreDiff; // score differs enough — use score
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // similar score — prefer newer
+                if (Math.abs(scoreDiff) > 0.05) return scoreDiff;
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             })
             .slice(0, 8);
 

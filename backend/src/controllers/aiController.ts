@@ -43,14 +43,48 @@ export const handleAIQuery = async (req: AuthedRequest, res: Response) => {
       retrieveRelevantMemory(userId, prompt, 5),
     ]);
 
-    // Build augmented prompt
-    const memoryContext = memory.length
-      ? memory.map((m: any, i: number) => `Memory ${i + 1}:\nUser: ${m.prompt}\nAssistant: ${m.reply}`).join("\n\n")
-      : "";
+    // Detect recency questions — bypass RAG, use recent history directly
+    const recencyPatterns = [
+      /what (was|is|were) the last (code|message|thing|prompt|command)/i,
+      /what (code|thing|prompt) did (i|you) (last|just|previously|recently)/i,
+      /last (code|thing|command|prompt) (i|you) (ran|asked|gave|sent|used)/i,
+      /most recent(ly)?/i,
+      /what did i (just|last|recently) (run|ask|send|give|do)/i,
+    ];
 
-    const augmentedPrompt = memoryContext
-      ? `You have access to relevant past conversations.\n\n${memoryContext}\n\nCurrent user message:\n${prompt}`
-      : prompt;
+    const isRecencyQuestion = recencyPatterns.some(p => p.test(prompt));
+
+    let augmentedPrompt: string;
+
+    if (isRecencyQuestion) {
+      // For recency questions — use the most recent 10 history items sorted by date
+      const recentHistory = await History.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+
+      const recentContext = recentHistory.length
+        ? recentHistory
+            .reverse()
+            .map((m: any, i: number) => `Recent ${i + 1} (${new Date(m.createdAt).toLocaleString()}):\nUser: ${m.prompt}\nAssistant: ${m.reply}`)
+            .join("\n\n")
+        : "";
+
+      augmentedPrompt = recentContext
+        ? `Here are the user's most recent conversations in chronological order (newest last):\n\n${recentContext}\n\nCurrent user message:\n${prompt}`
+        : prompt;
+
+      aiLogger.info({ userId, event: "recency_query_detected", prompt: prompt.slice(0, 60) }, "Recency question detected — using recent history instead of RAG");
+    } else {
+      // For regular questions — use RAG memory context
+      const memoryContext = memory.length
+        ? memory.map((m: any, i: number) => `Memory ${i + 1}:\nUser: ${m.prompt}\nAssistant: ${m.reply}`).join("\n\n")
+        : "";
+
+      augmentedPrompt = memoryContext
+        ? `You have access to relevant past conversations.\n\n${memoryContext}\n\nCurrent user message:\n${prompt}`
+        : prompt;
+    }
 
     aiLogger.info({
       userId,

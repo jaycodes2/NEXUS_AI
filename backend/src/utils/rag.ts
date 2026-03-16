@@ -42,13 +42,28 @@ export async function retrieveRelevantMemory(
         ])
     ]);
 
-    // Merge, deduplicate by _id
+    // Meta-question patterns — skip memories that are questions about memory itself
+    // These pollute RAG context and cause Gemini to answer from old meta-questions
+    const metaPatterns = [
+        /what (was|is|were) the last (code|message|thing|prompt)/i,
+        /what did (i|you) (ask|run|say|tell)/i,
+        /what was (my|the) (last|previous|recent)/i,
+        /do you remember/i,
+        /what have (i|we) (discussed|talked|been)/i,
+    ];
+
+    const isMetaQuestion = (prompt: string) =>
+        metaPatterns.some(p => p.test(prompt));
+
+    // Merge, deduplicate by _id, filter meta-questions
     const seen = new Set<string>();
     const merged = [...promptResults, ...replyResults]
         .filter(doc => {
             const id = doc._id.toString();
             if (seen.has(id)) return false;
             seen.add(id);
+            // Skip meta-questions about memory — they pollute context
+            if (isMetaQuestion(doc.prompt || "")) return false;
             return true;
         })
         .sort((a, b) => {
@@ -58,9 +73,6 @@ export async function retrieveRelevantMemory(
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         })
         .slice(0, limit);
-
-    console.log(`[RAG] found ${merged.length} memories for query: "${query.slice(0, 50)}"`);
-    merged.forEach((m, i) => console.log(`  [${i + 1}] score=${m.score?.toFixed(3)} prompt="${m.prompt.slice(0, 60)}"`));
 
     return merged.map(doc => ({
         prompt: doc.prompt,
