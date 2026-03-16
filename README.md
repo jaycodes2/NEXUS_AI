@@ -9,7 +9,7 @@
 
 **Production-grade AI chat platform with long-term memory, real-time web search, and code execution**
 
-[Live Demo](https://www.youtube.com/watch?v=I7juv1mnJnE) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API](#-api-endpoints)
+[Live Demo](https://nexus-ai-beige.vercel.app) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API](#-api-endpoints)
 
 </div>
 
