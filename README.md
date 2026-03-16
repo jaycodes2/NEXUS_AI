@@ -1,420 +1,303 @@
-# NEXUS AI – Full-Stack AI Chat Application
+# NEXUS AI
 
 <div align="center">
 
-![NEXUS AI](https://img.shields.io/badge/NEXUS-AI-blue?style=for-the-badge&logo=ai)
+![NEXUS AI](https://img.shields.io/badge/NEXUS-AI-blue?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-2.0.0-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![TypeScript](https://img.shields.io/badge/TypeScript-Full_Stack-3178C6?style=for-the-badge&logo=typescript)
 
-**An intelligent conversational AI platform with long-term memory and semantic understanding**
+**Production-grade AI chat platform with long-term memory, real-time web search, and code execution**
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [Deployment](#-deployment) • [API](#-api-endpoints)
+[Live Demo](#) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API](#-api-endpoints)
 
 </div>
 
-## 🌟 Overview
+---
 
-NEXUS AI is a production-ready full-stack conversational AI application that delivers a seamless chat experience with **long-term memory and semantic intelligence**. Built with cutting-edge technologies, it features intelligent conversation threading, semantic memory retrieval, and a beautiful responsive interface.
+> **Built as a full-stack portfolio project** demonstrating production AI integration, RAG architecture, LangChain-style tool agents, OAuth, structured logging, and deployment on Render.
 
-<video width="1000" controls>
-  <source src="https://github.com/jaycodes2/NEXUS_AI/raw/refs/heads/main/Complete%20working.mp4" type="video/mp4">
-</video>
+---
+
+## 📸 Preview
+
+### Chat Interface
+![Chat Interface](https://github.com/jaycodes2/NEXUS_AI/blob/main/Screenshot%202026-01-28%20185050.png?raw=true)
+
+### Welcome Page
+![Welcome Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Welcome_page.png?raw=true)
+
+### Login / Signup
+![Login Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Login&signup.png?raw=true)
+
+### Mobile Responsive
+![Mobile View](https://github.com/jaycodes2/NEXUS_AI/blob/main/mobile_responsiveness.jpeg?raw=true)
+
+---
 
 ## ✨ Features
 
-### 🤖 AI Chat Excellence
-- **Gemini 2.5 Flash Integration** - Real-time conversational AI with smooth message rendering
-- **Typing Indicators & Auto-scroll** - Enhanced user experience with visual feedback
-- **Streaming Responses** - Live AI response delivery
+### 🤖 AI Agents
+- **Web Search Agent** — Gemini autonomously calls Tavily Search API for real-time information when needed
+- **Code Interpreter Agent** — Executes JavaScript, TypeScript, and Python in a sandboxed Node.js `vm` environment and returns real stdout/stderr
+- **Tool orchestration** — Multi-round tool calling loop with parallel execution and status indicators streamed to the UI
 
-### 🧠 **Long-Term AI Memory & Intelligence**
-- **Semantic Memory with Vector Search** – All prompts and responses are embedded and stored using MongoDB Atlas Vector Search for meaning-based retrieval
-- **Retrieval-Augmented Generation (RAG)** – AI retrieves relevant past conversations before generating context-aware responses
-- **Cross-Thread Memory Recall** – AI references information from any previous conversation thread
-- **Hallucination-Safe Memory Usage** – Transparent responses when no relevant memory exists
-- **Semantic Chat History Search** – Search past conversations by meaning, not exact keywords
-- **Ask My Past Chats** – Dedicated memory-query mode for asking questions about past conversations
-- **Smart Thread Intelligence** – AI-generated summaries and semantic thread renaming
+### 🧠 Long-Term Memory & RAG
+- **Vector embeddings** on every message using Gemini's embedding model
+- **MongoDB Atlas Vector Search** for semantic retrieval across all past conversations
+- **Dual-path search** — queries both `promptEmbedding` and `replyEmbedding` in parallel, deduplicates, and ranks by cosine similarity score
+- **RAG-augmented prompts** — top 5 relevant memories injected into every new request
+- **Memory Search UI** — dedicated page to semantically query past conversations in natural language
 
-### 🔐 Secure Authentication
-- **JWT-based Authentication** - Secure login with email/password
-- **Protected Routes** - Automatic redirect logic based on authentication state
-- **Session Management** - Persistent user sessions
+### ⚡ Streaming & Performance
+- **Server-Sent Events (SSE)** with `flushHeaders()` for zero-latency stream start
+- **rAF-batched rendering** — chunks buffered and flushed at 60fps to avoid re-rendering on every token
+- **Parallel pre-flight** — API log, thread upsert, history fetch, and RAG all fire simultaneously before streaming starts
+- **SSE retry with exponential backoff** — auto-reconnects on network drop, shows inline status
+- **Thread switch skeleton** — cancels in-flight stream, shows animated skeleton while loading new history
 
-### 💬 Intelligent Threading
-- **Multi-thread Conversations** - Organize chats into separate threads
-- **Auto-generated Titles** - Smart thread naming based on conversation content
-- **Thread Management** - Easy switching, creation, and deletion of conversations
-- **🧠 Semantic Thread Organization** – Threads remain organized with automatic summaries and intelligent renaming
+### 📎 File Upload
+- Attach PDFs, images (JPG/PNG/WebP), and code files directly to messages
+- Converted to base64 in the browser — never stored on the server
+- Sent as Gemini multipart messages for native document and image understanding
 
-### 🎨 Beautiful Interface
-- **Glassmorphism Design** - Stunning sidebar with modern visual effects
-- **Fully Responsive** - Perfect experience across all devices
-- **Light/Dark Mode Ready** - Built with Tailwind CSS for theme compatibility
+### 🔐 Authentication
+- **JWT** with 7-day expiry
+- **Google OAuth** via Passport.js — account linking (existing email users can link Google, OAuth users blocked from password login with clear error)
+- **bcrypt** with configurable salt rounds (8 for production performance)
+- Proper error messages for all failure cases (wrong password, email not found, OAuth-only account)
 
-### 📚 Additional Pages
-- **Documentation** - Comprehensive project documentation
-- **Contact Form** - Clean, functional contact interface
-- **Welcome Screen** - Engaging first-time user experience
+### 🏗️ Production Infrastructure
+- **Pino structured logging** — JSON in production (Render-native), pretty-printed in dev, scoped child loggers per module
+- **express-rate-limit** — 20/min on auth (brute force), 60/min on AI queries, 30/min on memory search
+- **Health check endpoint** at `/api/health` for UptimeRobot monitoring
+- **Global error handler** with full stack trace logging
+- **Export conversations** as Markdown or PDF from both the topbar and sidebar thread menu
+
+---
 
 ## 🛠 Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| **React + TypeScript** | Type-safe component architecture |
-| **Tailwind CSS** | Utility-first styling system |
-| **React Router** | Client-side routing |
-| **LocalStorage** | Client-side state persistence |
+| | |
+|---|---|
+| React 18 + TypeScript | Component architecture |
+| Tailwind CSS v4 | Styling |
+| Framer Motion | Animations |
+| React Router (HashRouter) | Client-side routing |
+| ReactMarkdown + remark-gfm | Markdown rendering |
+| react-syntax-highlighter | Code block highlighting |
+| shadcn/ui | UI primitives |
 
 ### Backend
-| Technology | Purpose |
-|------------|---------|
-| **Node.js + Express** | Robust server framework |
-| **MongoDB + Mongoose** | Database with ODM |
-| **MongoDB Atlas Vector Search** | Semantic memory storage and retrieval |
-| **JWT** | Secure authentication |
-| **Google Gemini API** | AI conversation and embedding engine |
+| | |
+|---|---|
+| Node.js + Express + TypeScript | Server framework |
+| MongoDB + Mongoose | Database |
+| MongoDB Atlas Vector Search | Semantic memory retrieval |
+| Pino | Structured logging |
+| Passport.js | OAuth strategy |
+| bcrypt + JWT | Authentication |
+| express-rate-limit | Rate limiting |
 
-### AI & Memory
-| Technology | Purpose |
-|------------|---------|
-| **Google Gemini 2.5 Flash** | Primary conversation model |
-| **Vector Embeddings** | Semantic representation of conversations |
-| **RAG (Retrieval-Augmented Generation)** | Context-aware response generation |
-| **Semantic Search** | Meaning-based conversation retrieval |
+### AI
+| | |
+|---|---|
+| Google Gemini 2.0 Flash | Primary conversation model |
+| Gemini Embeddings | Vector embedding generation |
+| Tavily Search API | Real-time web search agent |
+| Node.js `vm` module | JavaScript/TypeScript sandbox |
+| Python `child_process` | Python execution sandbox |
+
+---
+
+## 🏛 Architecture
+
+### RAG Pipeline
+```
+User message
+    │
+    ├── generateEmbedding(prompt)
+    │
+    ├── Promise.all([
+    │     vectorSearch(promptEmbedding),   // parallel
+    │     vectorSearch(replyEmbedding)     // parallel
+    │   ])
+    │
+    ├── deduplicate + sort by cosine score
+    │
+    ├── inject top 5 as memory context
+    │
+    └── stream to Gemini → SSE to client
+```
+
+### Tool Agent Loop
+```
+User prompt
+    │
+    └── Gemini (AUTO tool mode)
+            │
+            ├── webSearch?  → Tavily API → results back to Gemini
+            ├── executeCode? → vm sandbox → stdout/stderr back to Gemini
+            ├── deleteThread? → MongoDB → result back to Gemini
+            │
+            └── final text response → SSE stream
+                (max 5 tool call rounds)
+```
+
+### Auth Flow
+```
+Email/password  →  bcrypt compare  →  JWT
+Google OAuth    →  Passport.js     →  find or create user  →  JWT  →  frontend callback
+```
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 16+ 
-- MongoDB Atlas (with Vector Search enabled)
+- Node.js 18+
+- MongoDB Atlas cluster with Vector Search enabled
 - Google Gemini API key
+- Tavily API key (for web search agent)
 
-### Backend Setup
+### Backend
 
 ```bash
-# Clone and setup backend
 cd backend
 npm install
-
-# Environment configuration
 cp .env.example .env
 ```
 
-**Environment Variables:**
+`.env`:
 ```env
-MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=your_jwt_secret_key
+MONGO_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_jwt_secret
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
+TAVILY_API_KEY=your_tavily_api_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+FRONTEND_URL=http://localhost:5173
+BCRYPT_ROUNDS=8
 PORT=5000
-# Vector Search Configuration
-VECTOR_SEARCH_INDEX_NAME=conversation_embeddings
-EMBEDDING_MODEL=embedding-001
 ```
 
 ```bash
-# Start development server
 npm run dev
 ```
 
-### Frontend Setup
+### Frontend
 
 ```bash
-# Clone and setup frontend  
 cd frontend
 npm install
-
-# Environment configuration
 cp .env.example .env
 ```
 
-**Environment Variables:**
+`.env`:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:5000
 ```
 
 ```bash
-# Start development server
 npm run dev
 ```
+
+### MongoDB Atlas Vector Search Index
+
+Create an index named `history_vector_index` on the `histories` collection:
+
+```json
+{
+  "fields": [
+    { "type": "vector", "path": "promptEmbedding", "numDimensions": 768, "similarity": "cosine" },
+    { "type": "vector", "path": "replyEmbedding", "numDimensions": 768, "similarity": "cosine" },
+    { "type": "filter", "path": "userId" }
+  ]
+}
+```
+
+---
 
 ## 📁 Project Structure
 
 ```
 nexus-ai/
-├── frontend/
-│   ├── src/
-│   │   ├── components/          # Reusable UI components
-│   │   │   ├── Chat.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── Login.tsx
-│   │   │   ├── Welcome.tsx
-│   │   │   └── MemorySearch.tsx  # Semantic search interface
-│   │   ├── pages/              # Route components
-│   │   │   ├── Documentation.tsx
-│   │   │   └── ContactPage.tsx
-│   │   └── utils/              # Helper functions
-│   │       └── thread.ts
-│   └── App.tsx
-└── backend/
-    ├── src/
-    │   ├── controllers/        # Business logic
-    │   │   ├── aiController.ts
-    │   │   ├── threadController.ts
-    │   │   ├── authController.ts
-    │   │   └── memoryController.ts  # Memory management
-    │   ├── models/             # Database schemas
-    │   │   ├── historyModels.ts
-    │   │   ├── threadModel.ts
-    │   │   ├── userModel.ts
-    │   │   └── memoryModel.ts  # Vector embeddings
-    │   ├── middleware/         # Express middleware
-    │   │   └── auth.ts
-    │   ├── utils/              # Utility functions
-    │   │   ├── aiClient.gemini.ts
-    │   │   ├── embeddingUtils.ts  # Vector embedding utilities
-    │   │   └── memoryRetrieval.ts # RAG implementation
-    │   ├── routes/             # API routes
-    │   │   ├── aiRoutes.ts
-    │   │   ├── authRoutes.ts
-    │   │   └── memoryRoutes.ts    # Memory search endpoints
-    │   └── server.ts          # Server entry point
-    └── package.json
+├── frontend/src/
+│   ├── components/
+│   │   ├── chat.tsx          # SSE streaming, rAF batching, file upload
+│   │   ├── Sidebar.tsx       # Thread list, search, export
+│   │   ├── Login.tsx         # Email + Google OAuth
+│   │   └── OAuthCallback.tsx # Handles Google redirect
+│   ├── pages/
+│   │   ├── MemorySearch.tsx  # Semantic memory query UI
+│   │   └── Documentation.tsx
+│   └── utils/
+│       ├── useExport.ts      # Markdown + PDF export
+│       └── thread.ts
+│
+└── backend/src/
+    ├── controllers/
+    │   ├── aiController.ts   # SSE stream, RAG, parallel pre-flight
+    │   └── memoryController.ts
+    ├── utils/
+    │   ├── aiClient.gemini.ts  # Tool agent loop, file handling
+    │   ├── tools/
+    │   │   ├── webSearch.ts    # Tavily integration
+    │   │   └── codeInterpreter.ts # vm sandbox + Python
+    │   ├── rag.ts              # Dual-path vector search
+    │   ├── passport.ts         # Google OAuth strategy
+    │   ├── rateLimiter.ts      # Per-route limits
+    │   └── logger.ts           # Pino scoped loggers
+    └── routes/
 ```
 
-## 🔄 How It Works
-
-### 1. Authentication Flow
-```mermaid
-graph TD
-    A[User Login] --> B[JWT Issuance]
-    B --> C[Access Protected Routes]
-    C --> D[Chat Interface]
-```
-
-### 2. Conversation with Memory
-```mermaid
-graph LR
-    A[New Message] --> B[Generate Embedding]
-    B --> C[Vector Search for Relevant Memories]
-    C --> D[Retrieve Context]
-    D --> E[Construct RAG Prompt]
-    E --> F[AI Processing with Context]
-    F --> G[Response Generation]
-    G --> H[Store Memory Embedding]
-    H --> I[UI Update]
-```
-
-### 3. Memory Intelligence Workflow
-- **Message Storage**: Each message generates vector embeddings
-- **Semantic Retrieval**: Vector search finds relevant past conversations
-- **RAG Context**: Retrieved memories enrich current prompt
-- **Intelligent Responses**: AI responds with full conversation context
-
-## 🧠 Memory Features in Detail
-
-### Semantic Memory System
-- **Vector Embeddings**: Convert conversations to numerical representations
-- **Atlas Vector Search**: MongoDB's built-in semantic search capability
-- **Relevance Scoring**: Cosine similarity for finding related conversations
-
-### Memory Query Examples
-```javascript
-// Search past conversations semantically
-POST /api/memory/search
-{
-  "query": "Where did I discuss MongoDB vector search?",
-  "userId": "user123",
-  "limit": 5
-}
-
-// Ask about past chats
-POST /api/memory/query
-{
-  "question": "What problems did I face while building this project?",
-  "userId": "user123"
-}
-```
-
-### Smart Thread Management
-- **Auto-Summarization**: Periodically generate thread summaries using AI
-- **Semantic Renaming**: Update thread titles based on evolving conversation context
-- **Cross-Thread Awareness**: AI understands connections between different conversations
-
-## 🚀 Deployment
-
-### Backend (Render/Railway/AWS)
-
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Deploy ready"
-   git push origin main
-   ```
-
-2. **Platform Setup**
-   - Connect your GitHub repository
-   - Set build command: `npm install`
-   - Set start command: `npm start`
-
-3. **Environment Variables**
-   ```env
-   MONGO_URI=your_production_mongo_atlas_url
-   GEMINI_API_KEY=your_gemini_key
-   JWT_SECRET=your_production_secret
-   VECTOR_SEARCH_INDEX_NAME=conversation_embeddings
-   EMBEDDING_MODEL=embedding-001
-   ```
-
-### Frontend (Vercel/Netlify)
-
-1. **Repository Import**
-   - Import your frontend repository
-   - Set build settings automatically
-
-2. **Environment Configuration**
-   ```env
-   VITE_API_URL=https://your-backend-url.com/api
-   ```
-
-3. **Deploy**
-   - Automatic deployments on git push
-   - Custom domain configuration available
+---
 
 ## 🔌 API Endpoints
 
-### AI & Chat Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/ai/query` | Send prompt & receive AI response with memory context |
-| `GET` | `/api/ai/history` | Retrieve thread message history |
-| `GET` | `/api/ai/threads` | Get all user threads |
-| `DELETE` | `/api/ai/threads/:threadId` | Delete thread and messages |
+| `POST` | `/api/auth/login` | Email login → JWT |
+| `POST` | `/api/auth/register` | Register → JWT |
+| `GET` | `/api/auth/google` | Initiate Google OAuth |
+| `GET` | `/api/auth/google/callback` | Google OAuth callback |
+| `POST` | `/api/ai/query` | Chat with RAG + agents (SSE) |
+| `GET` | `/api/ai/history` | Thread message history |
+| `GET` | `/api/ai/threads` | All user threads |
+| `DELETE` | `/api/ai/threads/:threadId` | Delete thread |
+| `POST` | `/api/memory/ask` | Semantic memory query |
+| `GET` | `/api/health` | Health check |
 
-### 🧠 Memory & Semantic Search Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/memory/search` | Semantic search across all conversations |
-| `POST` | `/api/memory/query` | Ask questions about past conversations |
-| `POST` | `/api/memory/summarize` | Generate thread summaries |
-| `GET` | `/api/memory/stats` | Get memory usage statistics |
+---
 
-### Authentication Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/auth/login` | User login |
-| `POST` | `/auth/signup` | User registration |
+## 🚢 Deployment
 
-## 🎯 Usage Examples
+Backend on **Render**, frontend on **Vercel/Netlify**.
 
-### Starting a New Chat with Memory
-1. Log into your account
-2. Click "New Chat" in sidebar
-3. Begin conversation - AI remembers past relevant discussions
-4. Switch between threads seamlessly
-
-### Using Semantic Search
-```javascript
-// Find related conversations
-"Show me where I discussed authentication implementation"
-
-// Query your own memory
-"What deployment challenges have I faced before?"
-
-// Get summaries
-"Summarize my last 5 conversations about database design"
+Set these environment variables on Render:
+```env
+GOOGLE_CALLBACK_URL=https://your-backend.onrender.com/api/auth/google/callback
+FRONTEND_URL=https://your-frontend.vercel.app
+NODE_ENV=production
 ```
 
-### Memory-Powered Conversations
-- **Context Retention**: AI remembers technical details from weeks ago
-- **Cross-Thread References**: "As we discussed in our API design conversation..."
-- **Semantic Understanding**: Finds related topics even with different terminology
+Add `https://your-backend.onrender.com/api/auth/google/callback` to your Google OAuth authorized redirect URIs.
 
-## 📸 Application Preview
+Monitor with [UptimeRobot](https://uptimerobot.com) pinging `/api/health` every 5 minutes to prevent Render free tier cold starts.
 
-<div align="center">
-
-### Welcome Page
-![Welcome Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Welcome_page.png?raw=true)
-
-### Login / Signup Page
-![Login / Signup Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Login&signup.png?raw=true)
-
-### Chat Interface with Memory Context
-![Chat Interface](https://github.com/jaycodes2/NEXUS_AI/blob/main/Screenshot%202026-01-28%20185050.png?raw=true)
-
-### Sidebar Navigation with Memory Search
-![Sidebar](https://github.com/jaycodes2/NEXUS_AI/blob/main/Sidebar_navigation.png?raw=true)
-
-### Mobile Responsive
-![Mobile View](https://github.com/jaycodes2/NEXUS_AI/blob/main/mobile_responsiveness.jpeg?raw=true)
-</div>
-
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Vector Search Configuration**
-   - Verify MongoDB Atlas Vector Search is enabled
-   - Check vector index creation and permissions
-   - Ensure embedding model is properly configured
-
-2. **Memory Retrieval Issues**
-   - Check embedding generation is working
-   - Verify similarity thresholds are appropriate
-   - Monitor memory storage limits
-
-3. **Authentication Failures**
-   - Verify JWT secret matches between frontend/backend
-   - Check token expiration settings
-
-4. **Database Connection**
-   - Confirm MongoDB Atlas URI format
-   - Ensure network access to database
-
-5. **AI Service Errors**
-   - Validate Gemini API key
-   - Check API rate limits
-
-### Memory System Debugging
-```bash
-# Check memory statistics
-curl -X GET http://localhost:5000/api/memory/stats \
-  -H "Authorization: Bearer YOUR_TOKEN"
-
-# Test semantic search
-curl -X POST http://localhost:5000/api/memory/search \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"query": "test query", "limit": 3}'
-```
-
-
-
-## 👥 Contributing
-
-We welcome contributions! Please feel free to submit pull requests or open issues for bugs and feature requests.
-
-### Memory System Contributions
-- Vector search optimization
-- RAG prompt engineering improvements
-- Memory compression techniques
-- UI enhancements for memory visualization
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
 
-**Built with ❤️ using modern web technologies**
-
-*React • Node.js • MongoDB Atlas • Vector Search • Gemini AI • Tailwind CSS*
-
-[Report Bug](https://github.com/yourusername/nexus-ai/issues) • [Request Feature](https://github.com/yourusername/nexus-ai/issues)
+**React • Node.js • TypeScript • MongoDB Atlas • Gemini AI • Tailwind CSS**
 
 </div>
