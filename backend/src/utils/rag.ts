@@ -42,7 +42,7 @@ export async function retrieveRelevantMemory(
         ])
     ]);
 
-    // Merge, deduplicate by _id, sort by score descending, take top `limit`
+    // Merge, deduplicate by _id
     const seen = new Set<string>();
     const merged = [...promptResults, ...replyResults]
         .filter(doc => {
@@ -51,8 +51,16 @@ export async function retrieveRelevantMemory(
             seen.add(id);
             return true;
         })
-        .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+        .sort((a, b) => {
+            // Sort by score, use recency as tiebreaker for similar scores
+            const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
+            if (Math.abs(scoreDiff) > 0.05) return scoreDiff;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })
         .slice(0, limit);
+
+    console.log(`[RAG] found ${merged.length} memories for query: "${query.slice(0, 50)}"`);
+    merged.forEach((m, i) => console.log(`  [${i + 1}] score=${m.score?.toFixed(3)} prompt="${m.prompt.slice(0, 60)}"`));
 
     return merged.map(doc => ({
         prompt: doc.prompt,

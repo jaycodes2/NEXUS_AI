@@ -49,7 +49,11 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
         ]);
         const searchMs = Date.now() - searchStart;
 
-        // Merge, deduplicate, sort by score, take top 8
+        // Detect recency-focused questions
+        const recencyKeywords = ["last", "latest", "recent", "most recent", "just ran", "just asked", "yesterday", "today", "just now"];
+        const isRecencyQuery = recencyKeywords.some(k => question.toLowerCase().includes(k));
+
+        // Merge and deduplicate
         const seen = new Set<string>();
         const merged = [...promptResults, ...replyResults]
             .filter(doc => {
@@ -58,7 +62,18 @@ export const askMyPastChats = async (req: AuthedRequest, res: Response) => {
                 seen.add(id);
                 return true;
             })
-            .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+            .sort((a, b) => {
+                if (isRecencyQuery) {
+                    // For recency queries — sort by date descending, use score as tiebreaker
+                    const dateDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    if (Math.abs(dateDiff) > 60000) return dateDiff; // more than 1 min apart — use date
+                    return (b.score ?? 0) - (a.score ?? 0); // within 1 min — use score
+                }
+                // For regular queries — sort by score, use date as tiebreaker
+                const scoreDiff = (b.score ?? 0) - (a.score ?? 0);
+                if (Math.abs(scoreDiff) > 0.05) return scoreDiff; // score differs enough — use score
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // similar score — prefer newer
+            })
             .slice(0, 8);
 
         memoryLogger.info({

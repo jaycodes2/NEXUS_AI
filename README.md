@@ -22,16 +22,16 @@
 ## 📸 Preview
 
 ### Chat Interface
-![Chat Interface](https://github.com/jaycodes2/NEXUS_AI/blob/main/Screenshot%202026-01-28%20185050.png?raw=true)
+![Chat Interface](https://github.com/jaycodes2/NEXUS_AI/blob/main/chat_layout.png?raw=true)
 
 ### Welcome Page
-![Welcome Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Welcome_page.png?raw=true)
+![Welcome Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/welcome_page.png?raw=true)
 
 ### Login / Signup
-![Login Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/Login&signup.png?raw=true)
+![Login Page](https://github.com/jaycodes2/NEXUS_AI/blob/main/login_page.png?raw=true)
 
 ### Mobile Responsive
-![Mobile View](https://github.com/jaycodes2/NEXUS_AI/blob/main/mobile_responsiveness.jpeg?raw=true)
+![Mobile View](https://github.com/jaycodes2/NEXUS_AI/blob/main/mobile_responsiveness.png?raw=true)
 
 ---
 
@@ -109,49 +109,16 @@
 | Node.js `vm` module | JavaScript/TypeScript sandbox |
 | Python `child_process` | Python execution sandbox |
 
----
-
 ## 🏛 Architecture
 
 ### RAG Pipeline
-```
-User message
-    │
-    ├── generateEmbedding(prompt)
-    │
-    ├── Promise.all([
-    │     vectorSearch(promptEmbedding),   // parallel
-    │     vectorSearch(replyEmbedding)     // parallel
-    │   ])
-    │
-    ├── deduplicate + sort by cosine score
-    │
-    ├── inject top 5 as memory context
-    │
-    └── stream to Gemini → SSE to client
-```
+![RAG Pipeline](https://github.com/jaycodes2/NEXUS_AI/blob/main/rag_pipeline.png?raw=true)
 
 ### Tool Agent Loop
-```
-User prompt
-    │
-    └── Gemini (AUTO tool mode)
-            │
-            ├── webSearch?  → Tavily API → results back to Gemini
-            ├── executeCode? → vm sandbox → stdout/stderr back to Gemini
-            ├── deleteThread? → MongoDB → result back to Gemini
-            │
-            └── final text response → SSE stream
-                (max 5 tool call rounds)
-```
+![Tool Agent Loop](https://github.com/jaycodes2/NEXUS_AI/blob/main/tool_flow.png?raw=true)
 
 ### Auth Flow
-```
-Email/password  →  bcrypt compare  →  JWT
-Google OAuth    →  Passport.js     →  find or create user  →  JWT  →  frontend callback
-```
-
----
+![Auth Flow](https://github.com/jaycodes2/NEXUS_AI/blob/main/auth_flow.png?raw=true)
 
 ## 🚀 Quick Start
 
