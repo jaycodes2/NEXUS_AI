@@ -9,7 +9,7 @@
 
 **Production-grade AI chat platform with long-term memory, real-time web search, and code execution**
 
-[Live Demo](#) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API](#-api-endpoints)
+[Live Demo](https://www.youtube.com/watch?v=I7juv1mnJnE) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [API](#-api-endpoints)
 
 </div>
 
@@ -32,6 +32,16 @@
 
 ### Mobile Responsive
 ![Mobile View](https://github.com/jaycodes2/NEXUS_AI/blob/main/mobile_responsiveness.png?raw=true)
+
+---
+
+## 🎥 Demo Video
+
+<div align="center">
+
+[![NEXUS AI Demo](https://img.youtube.com/vi/I7juv1mnJnE/0.jpg)](https://www.youtube.com/watch?v=I7juv1mnJnE)
+
+</div>
 
 ---
 
