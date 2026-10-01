@@ -15,7 +15,7 @@
 
 ---
 
-> **Production-grade event-driven backend and AI orchestration platform featuring dual-path RAG memory retrieval, real-time SSE streaming, and sandboxed code execution.
+**Production-grade event-driven backend and AI orchestration platform featuring dual-path RAG memory retrieval, real-time SSE streaming, and sandboxed code execution.**
 
 ---
 
