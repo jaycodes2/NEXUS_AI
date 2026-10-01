@@ -15,7 +15,7 @@
 
 ---
 
-> **Built as a full-stack portfolio project** demonstrating production AI integration, RAG architecture, LangChain-style tool agents, OAuth, structured logging, and deployment on Render.
+> **Production-grade event-driven backend and AI orchestration platform featuring dual-path RAG memory retrieval, real-time SSE streaming, and sandboxed code execution.
 
 ---
 
