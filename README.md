@@ -266,6 +266,45 @@ Add `https://your-backend.onrender.com/api/auth/google/callback` to your Google 
 Monitor with [UptimeRobot](https://uptimerobot.com) pinging `/api/health` every 5 minutes to prevent Render free tier cold starts.
 
 ---
+## ⚡ Performance Highlights & Benchmarks
+
+Load tested the semantic memory endpoint (`POST /api/memory/ask`) with [k6](https://k6.io), with per-stage timing instrumented in the controller.
+
+### Results
+
+| Metric | Value |
+|---|---|
+| Virtual users (peak) | 20 |
+| Test duration | 1m 40s (30s ramp-up, 1m hold, 10s ramp-down) |
+| Total requests | 568 |
+| Throughput | 5.66 req/s |
+| Error rate | 0.00% (568/568 returned 200) |
+| Avg latency | 1.85s |
+| Median latency | 1.72s |
+| p90 / p95 latency | 3.30s / 3.89s |
+| Max latency | 6.54s |
+
+### Where the time goes
+
+Each request logs `embedMs`, `searchMs`, and `aiMs` separately:
+
+| Stage | Observed |
+|---|---|
+| Query embedding | Mocked (random vector), ~0–1 ms |
+| MongoDB Atlas `$vectorSearch` (prompt + reply paths, in parallel) | ~0.5–0.7s at low load, up to ~4s at peak concurrency |
+| LLM answer generation | Mocked |
+
+**Finding:** the vector search stage accounts for nearly all request latency (e.g. `searchMs: 678` → request total 680ms), and it degrades as concurrency rises. This is consistent with the shared-tier limits of the **MongoDB Atlas M0** cluster used in development.
+
+### Test conditions
+
+- Backend ran on `localhost` against a hosted Atlas **M0** cluster, so some search time includes network round trip.
+- Gemini embedding and answer generation were both mocked (`LOAD_TEST_MODE=true`) to avoid burning API quota. This isolates the cost of auth, Express, and Atlas vector search. Real-world latency also includes two Gemini calls.
+- Because the query vector was random, retrieval relevance was not evaluated. This test measures latency only.
+- Rate limiters were bypassed in load-test mode.
+- Single endpoint, single query, so this is a baseline, not a full capacity test.
+
+---
 
 ## 📄 License
 
